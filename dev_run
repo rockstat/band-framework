@@ -1,0 +1,1 @@
+source .env && FLASK_APP=$FLASK_APP nodemon -e py --exec flask run --host=$HOST --port=$PORT
