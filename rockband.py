@@ -4,6 +4,7 @@ import time
 
 import consul
 import consul.std
+from consul import Check
 
 import docker
 client = docker.from_env()
@@ -13,10 +14,16 @@ STATUS_OPERATING = 1
 
 
 app.config.update(
-    DEBUG=True,
+    DEBUG=False,
     JSON_AS_ASCII=False,
-    MAX_CONTENT_LENGTH=1024
+    MAX_CONTENT_LENGTH=1024,
+    
 )
+
+servicesHost = '192.168.65.2'
+servicesDef = {
+    'tgbot': {'port': 5005, 'host': servicesHost, 'interval': 5}
+}
 
 
 @app.route('/')
@@ -27,9 +34,15 @@ def hello_world():
 @app.route('/register/<name>')
 def register(name):
     c = consul.Consul()
-    res = c.agent.service.register(name)
-    return jsonify({'result': res, 'ts': time.time()})
 
+    if name in servicesDef:
+        res = c.agent.service.register(name)
+        # c.agent.check.register('check', Check.docker(name, 'sh', 'ps -A | grep python', 5), notes='foo')
+        check = 'tcp-checker'
+        if check not in set(c.agent.checks().keys()):
+            c.agent.check.register(check, Check.tcp(**servicesDef[name]), notes='foo')
+            return jsonify({'result': res, 'ts': time.time()})
+    return jsonify({})
 
 @app.route('/services')
 def services():
@@ -68,4 +81,3 @@ def not_found(error):
     resp = make_response(jsonify({'result': 404}), 404)
     resp.headers['X-Something'] = 'A value'
     return resp
-

@@ -1,6 +1,0 @@
-rockband.egg-info/PKG-INFO
-rockband.egg-info/SOURCES.txt
-rockband.egg-info/dependency_links.txt
-rockband.egg-info/not-zip-safe
-rockband.egg-info/requires.txt
-rockband.egg-info/top_level.txt
