@@ -7,7 +7,7 @@ from .rpc import *
 from .server import *
 
 settings = completely_config()
-settings.update({'is_master': settings.name == BAND_SERVICE})
+print(settings)
 
 __all__ = (lib.__all__ + rpc.__all__ +
            adome.__all__ + server.__all__) + ['dome']

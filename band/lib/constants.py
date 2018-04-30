@@ -6,10 +6,6 @@ RESULT_OK = 'ok'
 RESULT_NOT_FOUND = 'not found'
 RESULT_INTERNAL_ERROR = 'internal server error'
 
-# Services
-BAND_SERVICE = 'band'
-KERNEL_SERVICE = 'kernel'
-
 __all__ = list([v for v  in globals().keys() if not v.startswith('__')])
 
 print(__all__)
