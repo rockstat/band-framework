@@ -2,25 +2,34 @@
 from dotenv import load_dotenv
 from pathlib import Path
 import os
+from jinja2 import Environment, FileSystemLoader, Template
+import yaml
+from box import Box
+
+from .lib import logger
 from .band_async import run_server
 
+logger.info('Working directory %s', os.getcwd())
 
-env_path = Path('.') / '.env'
-load_dotenv(dotenv_path=env_path)
 
-print(os.getcwd())
+def load_config(dir='.', conf_fn='config.yaml', env_fn='.env'):
+    root = Path(dir)
+    load_dotenv(dotenv_path=root/env_fn)
 
-host = os.getenv('HOST', '127.0.0.1')
-port = os.getenv('PORT', 10000)
-band = os.getenv('BAND', 'http://127.0.0.1:10000')
-cbind = os.getenv('CONTAINERS_BIND', 'http://127.0.0.1:10000')
-redis_dsn = os.getenv('REDIS_DSN', 'redis://127.0.0.1')
-ipath = os.getenv('IMAGES_PATH', '../images')
+    env = Environment(
+        loader=FileSystemLoader(str(root))
+    )
+    tmpl = env.get_template(conf_fn)
+    data = tmpl.render(**os.environ)
+    return Box(yaml.load(data))
 
+
+conf = load_config()
+logger.debug('config: %s')
+# pprint(conf)
 
 def main():
-    run_server(host=host, port=port, band_url=band, cbind=cbind,
-               redis_dsn=redis_dsn, images_path=ipath)
+    run_server(**conf)
 
 
 if __name__ == '__main__':

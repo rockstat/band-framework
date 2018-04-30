@@ -41,13 +41,13 @@ class Dock():
     Docker api found at https://docs.docker.com/engine/api/v1.24/#31-containers
     """
 
-    def __init__(self, cbind, band_url, images_path,  **kwargs):
+    def __init__(self, bind_addr, band_url, images_path,  **kwargs):
         
         self.dc = docker.from_env()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
 
-        self.containers_bind = cbind
+        self.containers_bind = bind_addr
         self.band_url = band_url
 
         self.default_image = 'base-async-py'
