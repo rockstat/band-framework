@@ -1,24 +1,22 @@
-import jsonrpcclient
 from jsonrpcclient.async_client import AsyncClient
 from jsonrpcclient.request import Request
+from async_timeout import timeout
 import asyncio
 import ujson
 import aioredis
-from async_timeout import timeout
 
-from . import register
-from .lib import logger
+from .. import dome
+from ..lib import logger
 
 # Positions in rpc method name
 DEST_POS = 0
 METHOD_POS = 1
 SENDER_POS = 2
 
-class RedisClientAsync(AsyncClient):
-
-    def __init__(self, service, redis_dsn, endpoint='none'):
-        super(RedisClientAsync, self).__init__(endpoint)
-        self.service = service
+class RedisPubSubRPC(AsyncClient):
+    def __init__(self, name, redis_dsn, endpoint='none'):
+        super(RedisPubSubRPC, self).__init__(endpoint)
+        self.name = name
         self.pending = {}
         self.redis_dsn = redis_dsn
         self.queue = asyncio.Queue()
@@ -33,9 +31,9 @@ class RedisClientAsync(AsyncClient):
             if 'id' in msg and msg['id'] in self.pending:
                 self.pending[msg['id']].set_result(msg)
         # method call
-        elif 'params' in msg and 'id' in msg and len(mparts) == 3 and mparts[DEST_POS] == self.service:            
+        elif 'params' in msg and 'id' in msg and len(mparts) == 3 and mparts[DEST_POS] == self.name:            
             msg['method'] = mparts[METHOD_POS]
-            response = await register.methods.dispatch(msg)
+            response = await dome.methods.dispatch(msg)
             if not response.is_notification:
                 await self.put(mparts[SENDER_POS], ujson.dumps(response))
 
@@ -52,10 +50,10 @@ class RedisClientAsync(AsyncClient):
             pub = await aioredis.create_redis_pool(self.redis_dsn, loop=app.loop)
             logger.info('redis_rpc_writer: entering loop')
             while True:
-                service, msg = await self.queue.get()
-                # logger.debug('publishing to %s: %s', service, msg)
+                name, msg = await self.queue.get()
+                # logger.debug('publishing to %s: %s', name, msg)
                 try:
-                    await pub.publish(service, msg)
+                    await pub.publish(name, msg)
                 except Exception as error:
                     logger.error('redis_rpc_writer: error %s', error)
 
@@ -69,7 +67,7 @@ class RedisClientAsync(AsyncClient):
         while True:
             try:
                 sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
-                ch, *_ = await sub.subscribe(self.service)
+                ch, *_ = await sub.subscribe(self.name)
                 logger.info('redis_rpc_reader: entering loop')
                 while await ch.wait_message():
                     msg = await ch.get(encoding='utf-8')
@@ -114,5 +112,6 @@ class RedisClientAsync(AsyncClient):
         
 
     async def request(self, to, method, **params):
-        req = Request(to+':'+method+':'+self.service, params)
+        req = Request(to+':'+method+':'+self.name, params)
         return await self.send(req, request_id=req['id'], to=to)
+

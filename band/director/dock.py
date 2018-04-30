@@ -1,14 +1,14 @@
+from pathlib import Path
 import docker
 # from aiofiles import os
 import os
-from pathlib import Path
 
-from .lib import DotDict, pick, logger
+
+from ..lib import DotDict, pick, logger
 
 BASE_IMG_TMPL = 'rst/{}'
 USER_IMG_TMPL = 'user/srv-{}'
 SHORT_FIEL_LIST = ['short_id', 'name', 'status']
-
 
 LINBAND = 'inband'
 LPORTS = 'ports'
@@ -41,19 +41,18 @@ class Dock():
     Docker api found at https://docs.docker.com/engine/api/v1.24/#31-containers
     """
 
-    def __init__(self, bind_addr, images_path,  **kwargs):
+    def __init__(self, dockopts, **kwargs):
         
         self.dc = docker.from_env()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
 
-        self.containers_bind = bind_addr
         self.params = kwargs
+        self.params.update(dockopts)
 
-        self.default_image = 'base-async-py'
-        print(os.stat(images_path))
+        print(os.stat(dockopts.get('images_path')))
 
-        self.images_path = Path(images_path).resolve().as_posix()
+        self.images_path = Path(dockopts.get('images_path')).resolve().as_posix()
         self.inspect_containers()
 
     def inspect_containers(self):

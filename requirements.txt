@@ -1,17 +1,17 @@
 # Base
 python-dotenv
-ujson
 jinja2
+pyyaml
+ujson
 uvloop
 asyncio
 aiohttp
 aioredis
+aiojobs
 jsonrpcserver 
 git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient
 docker
 aiofiles
-async-timeout
 aiojobs
-python-box
 # bots
 aiogram

@@ -1,0 +1,12 @@
+---
+name: band
+env: {{ ENV }}
+
+redis_dsn: {{ REDIS_DSN }}
+http_port: {{ BAND_HTTP_PORT }}
+bind_addr: {{ HOST_BIND_ADDR }}
+
+dockopts:
+  def_image: base-async-py
+  images_path: {{ BAND_IMAGES_PATH }}
+  band_url: {{ BAND_URL }}
