@@ -41,14 +41,14 @@ class Dock():
     Docker api found at https://docs.docker.com/engine/api/v1.24/#31-containers
     """
 
-    def __init__(self, bind_addr, band_url, images_path,  **kwargs):
+    def __init__(self, bind_addr, images_path,  **kwargs):
         
         self.dc = docker.from_env()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
 
         self.containers_bind = bind_addr
-        self.band_url = band_url
+        self.params = kwargs
 
         self.default_image = 'base-async-py'
         print(os.stat(images_path))
@@ -89,7 +89,7 @@ class Dock():
         return self.dc.images.build(**params)[0]
 
     def ls(self):
-        containers = self.dc.containers.list(
+        containers = self.dc.containers.list(all=True,
             filters={'label': LINBAND})
         return {c.name: c for c in containers}
 
@@ -118,10 +118,13 @@ class Dock():
     def remove_container(self, name):
         stop = self.stop_container(name)
 
-        if stop:
-            return stop
+        # if stop == True:
+            # return stop
 
         containers = self.ls()
+
+        print(self.ls())
+
         if name in list(containers.keys()):
             logger.info("removing container {}".format(name))
             return containers[name].remove() or True
@@ -161,10 +164,12 @@ class Dock():
             'ports': ports,
             'labels': {'inband': 'yes', 'ports': ";".join([str(v) for v in allocated])},
             'environment': {
-                'BAND': self.band_url
+                'BAND': self.params['band_url'],
+                'REDIS_DSN': self.params['redis_dsn'],
+                'SERVICE': name
             },
             'detach': True,
-            'auto_remove': True
+            'auto_remove': False
         }
 
         logger.info(

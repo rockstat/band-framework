@@ -1,11 +1,12 @@
 import jsonrpcclient
 from jsonrpcclient.async_client import AsyncClient
 from jsonrpcclient.request import Request
-from jsonrpcserver.aio import methods
 import asyncio
 import ujson
 import aioredis
+from async_timeout import timeout
 
+from . import register
 from .lib import logger
 
 # Positions in rpc method name
@@ -25,14 +26,16 @@ class RedisClientAsync(AsyncClient):
 
     async def dispatch(self, msg):
         mparts = msg['method'].split(':')
+        print(mparts)
         # call answer
         if 'result' in msg:
+            # logger.debug('received with result: %s', msg)
             if 'id' in msg and msg['id'] in self.pending:
                 self.pending[msg['id']].set_result(msg)
         # method call
-        elif 'params' in msg and 'id' in msg and len(mparts) == 3 and mparts[DEST_POS] == self.service:
-            response = await methods.dispatch(msg)
+        elif 'params' in msg and 'id' in msg and len(mparts) == 3 and mparts[DEST_POS] == self.service:            
             msg['method'] = mparts[METHOD_POS]
+            response = await register.methods.dispatch(msg)
             if not response.is_notification:
                 await self.put(mparts[SENDER_POS], ujson.dumps(response))
 
@@ -50,6 +53,7 @@ class RedisClientAsync(AsyncClient):
             logger.info('redis_rpc_writer: entering loop')
             while True:
                 service, msg = await self.queue.get()
+                # logger.debug('publishing to %s: %s', service, msg)
                 try:
                     await pub.publish(service, msg)
                 except Exception as error:
@@ -65,8 +69,8 @@ class RedisClientAsync(AsyncClient):
         while True:
             try:
                 sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
-                ch, *_ = await sub.subscribe('band')
-                logger.debug('redis_rpc_reader: entering loop')
+                ch, *_ = await sub.subscribe(self.service)
+                logger.info('redis_rpc_reader: entering loop')
                 while await ch.wait_message():
                     msg = await ch.get(encoding='utf-8')
                     try:
@@ -76,10 +80,10 @@ class RedisClientAsync(AsyncClient):
                         logger.error(
                             'redis_rpc_reader: dispatching error %s', error)
             except aioredis.ConnectionClosedError:
-                logger.debug('redis_rpc_reader: connection closed')
+                logger.error('redis_rpc_reader: connection closed')
                 await asyncio.sleep(1)
             except asyncio.CancelledError:
-                logger.debug('redis_rpc_reader: loop cancelled')
+                logger.info('redis_rpc_reader: loop cancelled')
                 break
             except Exception as error:
                 logger.error('redis_rpc_reader: unknown error %s', error)
@@ -95,12 +99,19 @@ class RedisClientAsync(AsyncClient):
         # Outbound msgs queue
         await self.put(to, request.encode())
         # Waiting for response
-        self.pending[req_id] = asyncio.Future()
-        await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
+        try:
+            req = self.pending[req_id] = asyncio.Future()
+            # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
+            async with timeout(2) as cm:
+                await req
+        # except asyncio.TimeoutError:
+        #     logger.error('TimeoutError')
+        finally:
+            del self.pending[req_id]
+        
         # Retunrning result
-        result = self.pending[req_id].result()
-        del self.pending[req_id]
-        return self.process_response(result)
+        return self.process_response(req.result())
+        
 
     async def request(self, to, method, **params):
         req = Request(to+':'+method+':'+self.service, params)

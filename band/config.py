@@ -1,22 +1,20 @@
-import configparser
+from jinja2 import Environment, FileSystemLoader, Template
+from dotenv import load_dotenv
+from pathlib import Path
+from box import Box
+import yaml
 import os
 
-config = configparser.ConfigParser()
-config.read('../params.ini')
 
-listen = os.environ.get('HOST', '0.0.0.0')
-port = os.environ.get('PORT', '10000')
+def load_config(dir='.', conf_fn='config.yaml', env_fn='.env'):
+    root = Path(dir)
+    load_dotenv(dotenv_path=root/env_fn)
 
-DS = 'DEFAULT'
+    env = Environment(
+        loader=FileSystemLoader(str(root))
+    )
+    tmpl = env.get_template(conf_fn)
+    data = tmpl.render(**os.environ)
+    return Box(yaml.load(data))
 
-def set_options(**kwargs):
-    for k, v in kwargs.items():
-        config.set(DS, k, v)
-
-set_options(listen=listen, port=port)
-
-def option(name, section=DS):
-    if name in config.sections():
-        return config[name]
-    return config[section].get(name)
 

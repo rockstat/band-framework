@@ -2,8 +2,10 @@
 redis_dsn: {{ REDIS_DSN }}
 
 http_port: {{ BAND_HTTP_PORT }}
-http_host: {{ HOST_BIND }}
+http_host: {{ HOST_BIND_ADDR }}
 
-bind_addr: {{ HOST_BIND }}
+bind_addr: {{ HOST_BIND_ADDR }}
 images_path: {{ BAND_IMAGES_PATH }}
 band_url: {{ BAND_URL }}
+
+service: band
