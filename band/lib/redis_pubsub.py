@@ -3,6 +3,7 @@ from jsonrpcclient.request import Request
 from async_timeout import timeout
 import asyncio
 import ujson
+import itertools
 import aioredis
 
 from .. import dome
@@ -22,6 +23,8 @@ class RedisPubSubRPC(AsyncClient):
         self.redis_dsn = redis_dsn
         self.queue = asyncio.Queue()
         self.timeout = 5
+
+        self.id_gen = itertools.count(1)
 
     async def dispatch(self, msg):
         mparts = msg['method'].split(':')
@@ -113,8 +116,10 @@ class RedisPubSubRPC(AsyncClient):
         
 
     async def request(self, to, method, **params):
-        req = Request(to+':'+method+':'+self.name, params)
+        req_id = str(next(self.id_gen))
+        req = Request(to+':'+method+':'+self.name, params, request_id=req_id)
         return await self.send(req, request_id=req['id'], to=to)
+
 
 
 # Attaching to aiohttp

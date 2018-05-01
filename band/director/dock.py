@@ -16,7 +16,7 @@ LDELIM = ':'
 
 
 def pick(d, *keys):
-    return {k: (getattr(d,k) if hasattr(d, k) else d[k]) for k in keys}
+    return {k: (getattr(d, k) if hasattr(d, k) else d[k]) for k in keys}
 
 
 class Labels(dict):
@@ -47,7 +47,7 @@ class Dock():
     """
 
     def __init__(self, bind_addr, images_path, default_image, container_env, **kwargs):
-        
+
         self.dc = docker.from_env()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
@@ -67,7 +67,7 @@ class Dock():
 
     def inspect_containers(self):
         containers = self.ls().values()
-        
+
         for container in containers:
             self.inspect_container(container)
 
@@ -77,29 +77,9 @@ class Dock():
         for port in lbs.ports:
             self.allocate_port(port)
 
-    def build_image(self, base, name):
-        
-        # Base images
-        params = {
-            'path': self.images_path + '/' + base,
-            'tag': BASE_IMG_TMPL.format(base),
-            'labels': Labels()
-        }
-        logger.info("building base image {tag} from {path}".format(**params))
-        self.dc.images.build(**params)
-
-        params = {
-            'path': self.images_path + '/' + name,
-            'tag': USER_IMG_TMPL.format(name),
-            'labels': Labels()
-        }
-        logger.info("building service image {tag} from {path}".format(**params))
-        
-        return self.dc.images.build(**params)[0]
-
     def ls(self):
         containers = self.dc.containers.list(all=True,
-            filters={'label': LINBAND})
+                                             filters={'label': LINBAND})
         return {c.name: c for c in containers}
 
     def containers_list(self):
@@ -132,7 +112,7 @@ class Dock():
         if name in list(containers.keys()):
             logger.info("removing container {}".format(name))
             containers[name].remove()
-        
+
         return True
 
     def stop_container(self, name):
@@ -146,15 +126,34 @@ class Dock():
     def ping(self, name):
         return 'not implemented'
 
+    def build_image(self, base, name):
+        
+        # # Base images
+        # params = {
+        #     'path': self.images_path,
+        #     'tag': BASE_IMG_TMPL.format(base),
+        #     'labels': Labels()
+        # }
+        # logger.info("building base image {tag} from {path}".format(**params))
+        # self.dc.images.build(**params)
+
+        params = {
+            'path': self.images_path,
+            'tag': USER_IMG_TMPL.format(name),
+            'labels': Labels()
+        }
+        logger.info("building service image {tag} from {path}".format(**params))
+        
+        return self.dc.images.build(**params)[0]
+
+
     def run_container(self, name, params):
 
         self.remove_container(name)
 
-        baseImage = params.get('image', self.default_image)
-
         logger.info("building image for {}".format(name))
 
-        img = self.build_image(baseImage, name)
+        img = self.build_image(self.images_path, name)
         attrs = Prodict.from_dict(img.attrs)
 
         ports = {}
@@ -163,7 +162,7 @@ class Dock():
             aport = self.allocate_port()
             allocated.append(aport)
             ports[port] = (self.bind_addr, aport)
-        
+
         params = {
             'name': name,
             'hostname': name,

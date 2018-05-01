@@ -1,19 +1,7 @@
 import asyncio
-import uvloop
-from aiohttp import web
 import aiodocker
-from aiohttp_utils import Response, routing, negotiation
-import webargs
-from webargs.aiohttpparser import use_args
 
-loop = uvloop.new_event_loop()
-asyncio.set_event_loop(loop)
-
-# docs: https://docs.aiohttp.org/en/stable/
 # docs: http://aiodocker.readthedocs.io/en/latest/
-# docs: https://github.com/sloria/aiohttp_utils
-# docs: https://webargs.readthedocs.io/en/latest
-# docs: https://docker-py.readthedocs.io/en/stable/
 # docs: https://docs.docker.com/engine/api/v1.37/#operation/ContainerList
 
 # @use_args({'name': fields.Str(required=True)})
@@ -47,27 +35,10 @@ def container_to_json(container):
 
 async def list_containers(request):
     items = [container_to_json(x) for x in await docker.containers.list(all=True)]
-    return Response({'items': items})
+    return{'items': items}
 
 
-@use_args({'name': webargs.fields.Str(location='match_info', required=True)})
 async def create_container(request, args):
     container = await docker.containers.run(config, name=args['name'])
-    return Response({'container': container_to_json(container)})
+    return {'container': container_to_json(container)}
 
-
-app = web.Application()
-negotiation.setup(
-    app, renderers={
-        'application/json': negotiation.render_json
-    }
-)
-
-app.add_routes([
-    web.get('/list', list_containers),
-    web.get('/create/{name}', create_container)
-])
-# ])
-
-
-web.run_app(app, host='127.0.0.1', port=8008)
