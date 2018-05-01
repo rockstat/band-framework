@@ -15,3 +15,5 @@ aiofiles
 aiojobs
 # bots
 aiogram
+prodict
+

@@ -1,0 +1,1 @@
+NAME=$1 PORT=10012 nodemon -e py --exec python3 -m band

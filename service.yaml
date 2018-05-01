@@ -1,6 +1,8 @@
 ---
-redis_dsn: {{ REDIS_DSN }}
+name: {{ NAME }}
+env: {{ ENV }}
+
 bind_addr: {{ HOST|default('0.0.0.0') }}
 http_port: {{ PORT|default('8080') }}
-band_url: {{ BAND_URL }}
-service: {{ SERVICE }}
+redis_dsn: {{ REDIS_DSN|default('redis://localhost') }}
+band_url: {{ BAND_URL|default('http://127.0.0.1:10000') }}

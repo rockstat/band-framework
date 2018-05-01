@@ -2,9 +2,9 @@ from pathlib import Path
 import docker
 # from aiofiles import os
 import os
+from prodict import Prodict
 
-
-from ..lib import DotDict, pick, logger
+from .. import logger
 
 BASE_IMG_TMPL = 'rst/{}'
 USER_IMG_TMPL = 'user/srv-{}'
@@ -13,6 +13,11 @@ SHORT_FIEL_LIST = ['short_id', 'name', 'status']
 LINBAND = 'inband'
 LPORTS = 'ports'
 LDELIM = ':'
+
+
+def pick(d, *keys):
+    return {k: (getattr(d,k) if hasattr(d, k) else d[k]) for k in keys}
+
 
 class Labels(dict):
     @property
@@ -41,18 +46,23 @@ class Dock():
     Docker api found at https://docs.docker.com/engine/api/v1.24/#31-containers
     """
 
-    def __init__(self, dockopts, **kwargs):
+    def __init__(self, bind_addr, images_path, default_image, container_env, **kwargs):
         
         self.dc = docker.from_env()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
 
-        self.params = kwargs
-        self.params.update(dockopts)
+        self.bind_addr = bind_addr
+        self.images_path = images_path
+        self.default_image = default_image
+        self.container_env = container_env
 
-        print(os.stat(dockopts.get('images_path')))
+        # self.params = kwargs
+        # self.params.update(dockopts)
 
-        self.images_path = Path(dockopts.get('images_path')).resolve().as_posix()
+        print(os.stat(images_path))
+
+        self.images_path = Path(images_path).resolve().as_posix()
         self.inspect_containers()
 
     def inspect_containers(self):
@@ -93,7 +103,7 @@ class Dock():
         return {c.name: c for c in containers}
 
     def containers_list(self):
-        return [pick(c, *SHORT_FIEL_LIST) for c in self.ls().values()]
+        return list([pick(c, *SHORT_FIEL_LIST) for c in self.ls().values()])
 
     def get(self, name):
         for cn, c in self.ls().items():
@@ -115,18 +125,15 @@ class Dock():
         return port
 
     def remove_container(self, name):
-        stop = self.stop_container(name)
-
-        # if stop == True:
-            # return stop
+        self.stop_container(name)
 
         containers = self.ls()
 
-        print(self.ls())
-
         if name in list(containers.keys()):
             logger.info("removing container {}".format(name))
-            return containers[name].remove() or True
+            containers[name].remove()
+        
+        return True
 
     def stop_container(self, name):
         containers = self.ls()
@@ -137,7 +144,7 @@ class Dock():
             return True
 
     def ping(self, name):
-        None
+        return 'not implemented'
 
     def run_container(self, name, params):
 
@@ -148,25 +155,21 @@ class Dock():
         logger.info("building image for {}".format(name))
 
         img = self.build_image(baseImage, name)
-        attrs = DotDict(img.attrs)
+        attrs = Prodict.from_dict(img.attrs)
 
         ports = {}
         allocated = []
         for port in attrs.Config.ExposedPorts or {}:
             aport = self.allocate_port()
             allocated.append(aport)
-            ports[port] = (self.containers_bind, aport)
-
+            ports[port] = (self.bind_addr, aport)
+        
         params = {
             'name': name,
             'hostname': name,
             'ports': ports,
             'labels': {'inband': 'yes', 'ports': ";".join([str(v) for v in allocated])},
-            'environment': {
-                'BAND': self.params['band_url'],
-                'REDIS_DSN': self.params['redis_dsn'],
-                'SERVICE': name
-            },
+            'environment': self.container_env,
             'detach': True,
             'auto_remove': False
         }

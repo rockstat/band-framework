@@ -1,73 +1,58 @@
 from asyncio import sleep
+from .. import (settings, dome, rpc, logger,
+                RESULT_OK, BAND_SERVICE, KERNEL_SERVICE)
 
-from ..lib import resp, RESULT_OK, RESULT_PONG, BAND_SERVICE, KERNEL_SERVICE
-from .. import dome
-from . import dock
+from .dock import Dock
 
-# Registering new service
-@dome.methods.add
-async def service_register(**kwargs):
-    print(kwargs)
-    return True
+dock = Dock(**settings)
+logger.info('Initializing director api')
 
-# Creating and running new service
-@dome.methods.add
-async def service_run(name, data):
-    return dock.run_container(name, data)
 
-# Ping request
-@dome.methods.add
-async def service_ping(name):
-    dock.ping(name)
+@dome.expose(path='/run/{name}')
+async def service_run(name, **params):
+    """
+    Create and run new container with service
+    """
+    return dock.run_container(name, params)
 
-# Ask service status
-@dome.methods.add
-async def ask_status(name):
-    return await .request(name, 'status')
 
-########## HTTP ROUTES
+@dome.expose(path='/ping/{name}')
+async def service_ping(name, **params):
+    """
+    Ping service
+    """
+    return dock.ping(name)
 
-@dome.routes.get('/')
-async def http_index(request):
-    return resp(RESULT_OK)
 
-@dome.routes.post('/register')
-async def http_service_register(request):
-    data = await request.post()
-    c = await service_register(data=data)
-    return resp(c)
+@dome.expose()
+async def list(**params):
+    """
+    HTTP endpoint
+    list containers
+    """
+    return dock.containers_list()
 
-@dome.routes.post('/run/{name}')
-async def http_service_run(request):
-    data = await request.post()
-    name = request.match_info['name']
-    c = await service_run(name, data)
-    return resp(c)
 
-@dome.routes.get('/ping/{name}')
-async def http_ping(request):
-    name = request.match_info['name']
-    await service_ping(name)
-    return resp(RESULT_PONG)
+@dome.expose(path='/ask_status/{name}')
+async def ask_status(name, **params):
+    """
+    Ask service status
+    """
+    return await rpc.request(name, 'status')
 
-@dome.routes.get('/ask_status/{name}')
-async def http_ask_status(request):
-    result = await ask_status(request.match_info['name'])
-    return resp(result)
 
-# Unregister service request
-@dome.routes.get('/unload/{name}')
-async def unload(request):
-    name = request.match_info['name']
-    res = dock.remove_container(name)
-    return resp(res)
+@dome.expose(path='/unload/{name}')
+async def unload(name, *params):
+    """
+    Unload/remove service
+    """
+    return dock.remove_container(name)
 
-@dome.routes.get('/list')
-async def containers(request):
-    return resp(dock.containers_list())
 
-@dome.routes.get('/stop/{name}')
-async def stop(request):
-    name = request.match_info['name']
-    return resp(dock.stop_container(name))
-
+@dome.expose(path='/stop/{name}')
+async def stop(name, request):
+    """
+    HTTP endpoint
+    stop container
+    """
+    return dock.stop_container(name)

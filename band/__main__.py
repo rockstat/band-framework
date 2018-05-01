@@ -1,7 +1,8 @@
-from . import settings, run_server
+from . import settings, start_server
+
 
 def main():
-    run_server(**settings)
+    start_server(**settings)
 
 if __name__ == '__main__':
     main()

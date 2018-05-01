@@ -9,8 +9,5 @@ class DotDict(dict):
         self[attr] = value
 
 
-def pick(d, *keys):
-    return {k: d[k] for k in keys}
-
-__all__ = ['DotDict', 'pick']
+__all__ = ['DotDict']
 

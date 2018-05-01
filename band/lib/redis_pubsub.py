@@ -6,7 +6,8 @@ import ujson
 import aioredis
 
 from .. import dome
-from ..lib import logger
+from .. import logger
+
 
 # Positions in rpc method name
 DEST_POS = 0
@@ -14,7 +15,7 @@ METHOD_POS = 1
 SENDER_POS = 2
 
 class RedisPubSubRPC(AsyncClient):
-    def __init__(self, name, redis_dsn, endpoint='none'):
+    def __init__(self, name, redis_dsn, endpoint='none', **kwargs):
         super(RedisPubSubRPC, self).__init__(endpoint)
         self.name = name
         self.pending = {}
@@ -114,4 +115,27 @@ class RedisPubSubRPC(AsyncClient):
     async def request(self, to, method, **params):
         req = Request(to+':'+method+':'+self.name, params)
         return await self.send(req, request_id=req['id'], to=to)
+
+
+# Attaching to aiohttp
+
+async def redis_rpc_startup(app):
+    app['rrpc_w'] = app.loop.create_task(app['rpc'].writer(app))
+    app['rrpc_r'] = app.loop.create_task(app['rpc'].reader(app))
+
+
+async def redis_rpc_cleanup(app):
+    for key in ['rrpc_r', 'rrpc_w']:
+        app[key].cancel()
+        await app[key]
+
+def attach_redis_rpc(app, name, **kwargs):
+
+    rpc = app['rpc'] = RedisPubSubRPC(name=name, **kwargs)
+    app.on_startup.append(redis_rpc_startup)
+    app.on_shutdown.append(redis_rpc_cleanup)
+    return rpc
+
+
+__all__ = ['RedisPubSubRPC', 'attach_redis_rpc']
 

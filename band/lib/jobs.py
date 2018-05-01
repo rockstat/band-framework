@@ -1,21 +1,26 @@
-from asyncio import sleep
 import aiojobs
-from .. import dome
+import inspect
+from .. import dome, logger
 
 __all__ = ['attach_scheduler']
 
 
-async def jobs_startup(app):
-    app['redis_rpc_writer'] = app.loop.create_task(app['rpc'].writer(app))
+async def scheduler_startup(app):
+    app['scheduler'] = await aiojobs.create_scheduler()
+    logger.info('starting scheduler')
     for task in dome.tasks:
-        await app['scheduler'].spawn(task())
+        print(inspect.iscoroutinefunction(task))
+        if inspect.iscoroutinefunction(task) == True:
+            await app['scheduler'].spawn(task)
+        else:
+            await app['scheduler'].spawn(task)
 
 
-async def jobs_cleanup(app):
+async def scheduler_cleanup(app):
     app['scheduler'].close()
 
 
 def attach_scheduler(app):
-    app.on_startup.append(jobs_startup)
-    app.on_shutdown.append(jobs_cleanup)
+    app.on_startup.append(scheduler_startup)
+    app.on_shutdown.append(scheduler_cleanup)
 
