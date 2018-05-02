@@ -1,6 +1,7 @@
 # Base
 python-dotenv
 jinja2
+inflection
 pyyaml
 ujson
 uvloop

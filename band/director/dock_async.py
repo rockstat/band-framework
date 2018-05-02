@@ -9,7 +9,7 @@ import re
 from prodict import Prodict
 from box import Box
 import ujson
-
+import subprocess
 from .. import logger
 
 """
@@ -20,36 +20,30 @@ https://docs.docker.com/engine/api/v1.37/#operation/ContainerList
 https://docs.docker.com/engine/api/v1.24/#31-containers
 """
 
-config = {
-    "Cmd": ["/bin/ls"],
-    "Image": "alpine:latest",
-    "AttachStdin": False,
-    "AttachStdout": False,
-    "AttachStderr": False,
-    "Tty": False,
-    "OpenStdin": False,
-}
+tar_image_cmd = ['tar', '-c', '-X', '.dockerignore', '.', '-C']
 
-def recursive_key_map(obj):
+def underdict(obj):
     if isinstance(obj, dict):
         new_dict = {}
         for key, value in obj.items():
             key = underscore(key)
-            new_dict[key] = recursive_key_map(value)
+            new_dict[key] = underdict(value)
         return new_dict
     # if hasattr(obj, '__iter__'):
-    #     return [recursive_key_map(value) for value in obj]
+    #     return [underdict(value) for value in obj]
     else:
         return obj
 
 def inject_attrs(cont):
-    
-    attrs = recursive_key_map(cont._container)
-    attrs['name'] = attrs['names'][0].strip('/')
+    attrs = underdict(cont._container)
+    attrs['name'] = (attrs['name'] if 'name' in attrs else attrs['names'][0]).strip('/')
     attrs['short_id'] = attrs['id'][:12]
+    if 'state' in attrs and 'status' in attrs['state']:
+        attrs['status'] = attrs['state']['status']
+    if 'config' in attrs and 'labels' in attrs['config']:
+        attrs['labels'] = attrs['config']['labels']
     cont.attrs = Prodict.from_dict(attrs)
     return cont
-
 
 def pack_ports(plist=[]):
     return ':'.join([str(p) for p in plist])
@@ -144,50 +138,53 @@ class Dock():
 
     async def run_container(self, name, params):
 
+        img_name = image_name('async-py')
+        img_path = self.default_image_path
+        img_id = None
 
-
-        
-        file = f'{self.default_image_path}/band.tar'
-
-        with open(file, mode='rb') as f:
-            # contents = await f.read()
-
-            logger.info(f"building image for {name}")
+        with subprocess.Popen(tar_image_cmd + [img_path], stdout=subprocess.PIPE) as proc:
             img_params = Prodict.from_dict({
-                'fileobj': f,
-                'encoding': 'utf-8',
-                # 'remote': f"file://{self.default_image_path}",
-                # 'remote': f'{self.default_image_path}/Dockerfile',
-                'tag': image_name('async-py'),
-                'labels': def_labels()
+                'fileobj': proc.stdout,
+                'encoding': 'identity',
+                'tag': img_name,
+                'labels': def_labels(),
+                'stream': True
             })
-            logger.info(f"building service image {img_params.tag} from {img_params.path_dockerfile}")
-            img = await self.dc.images.build(**img_params)
 
-        
-        
+            logger.info(f"building image {img_params.tag} from {self.default_image_path}")
+            async for chunk in await self.dc.images.build(**img_params):
+                if isinstance(chunk, dict):
+                    if 'aux' in chunk:
+                        img_id = underdict(chunk['aux'])
+                else:
+                    logger.debug('chunk: %s %s', type(chunk), chunk)
+            logger.info('image created %s', img_id)
 
-        attrs = Prodict.from_dict(img)
+        img = await self.dc.images.get(img_name)
+        img_attrs = Prodict.from_dict(underdict(img))
 
         ports = {port: (self.bind_addr, self.allocate_port(),)
-                 for port in attrs.Config.ExposedPorts.keys() or {}}
+                 for port in img_attrs.container_config.exposed_ports.keys() or {}}
         a_ports = [port[1] for port in ports.values()]
 
-        config = Box({
-            'Image': attrs.tags[0],
+        config = Prodict.from_dict({
+            'Image': img_attrs.repo_tags[0],
             'Hostname': name,
             'Ports': ports,
             'Labels': def_labels(a_ports=a_ports),
-            'Env': self.container_env,
-            'StopSignal': 'SIGTERM',  # def sigterm
+            'Env': [f"{k}={v}" for k,v in self.container_env.items()],
+            'StopSignal': 'SIGTERM',
             'HostConfig': {
-                'RestartPolicy': 'unless-stopped'
+                'RestartPolicy': {
+                    'Name': 'unless-stopped'
+                }
             }
         })
-        print(config)
 
-        logger.info(f"starting container {name}. ports: {config.ports}")
+        logger.info(f"starting container {name}. ports: {config.Ports}")
         c = await self.dc.containers.create_or_replace(name, config)
-
-        logger.info(f'started container {c.name} [{c.short_id}]')
+        await c.start()
+        await c.show()
+        c = inject_attrs(c)
+        logger.info(f'started container {c.attrs.name} [{c.attrs.id}]')
         return short_info(c)
