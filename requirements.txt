@@ -15,5 +15,7 @@ aiofiles
 aiojobs
 # bots
 aiogram
+#dicts
+python-box
 prodict
 

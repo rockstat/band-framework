@@ -8,13 +8,15 @@ __all__ = ['attach_scheduler']
 async def scheduler_startup(app):
     app['scheduler'] = await aiojobs.create_scheduler()
     logger.info('starting scheduler')
-    for task in dome.tasks:
-        print(inspect.iscoroutinefunction(task))
-        if inspect.iscoroutinefunction(task) == True:
+    try:
+        for task in dome.tasks:
+            print(inspect.iscoroutinefunction(task))
+            print(type(task))
+            if inspect.iscoroutinefunction(task) == True:
+                task = task()
             await app['scheduler'].spawn(task)
-        else:
-            await app['scheduler'].spawn(task)
-
+    except Exception:
+        logger.exception('exc')
 
 async def scheduler_cleanup(app):
     app['scheduler'].close()

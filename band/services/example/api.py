@@ -26,19 +26,19 @@ async def __status(**params):
     }
 
 
-# @dome.tasks.add
-# async def test_background_task():
-#     """
-#     Background task example
-#     """
-#     try:
-#         i = 0
-#         await sleep(3)
-#         while True:
-#             if i < 5:
-#                 print({'task': 'implemented and executed'})
-#             # delay between executions
-#             i += 1
-#             await sleep(3)
-#     except Exception:
-#         logger.exception('err')
+@dome.tasks.add
+async def test_background_task():
+    """
+    Background task example
+    """
+    try:
+        i = 0
+        await sleep(3)
+        while True:
+            if i < 5:
+                print({'task': 'implemented and executed'})
+            # delay between executions
+            i += 1
+            await sleep(3)
+    except Exception:
+        logger.exception('err')
