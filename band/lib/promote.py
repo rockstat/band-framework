@@ -1,18 +1,27 @@
-import asyncio
+from asyncio import sleep
+from .. import (settings, dome, logger, rpc, BAND_SERVICE)
 
-from ..constants import KERNEL_SERVICE
-from ..log import logger
 
-async def promote(name, rpc, methods):
+@dome.tasks.add
+async def promote():
     logger.info('announcing service')
     while True:
-        await asyncio.sleep(1)
+        # Initial delay
+        await sleep(1)
+        logger.info('promoting service')
         try:
-            await rpc.request(KERNEL_SERVICE, 'service_register',
-                              name=name,
-                              methods=methods.roles_tups)
+            await rpc.request(BAND_SERVICE, 'promote',
+                              name=settings.name)
         except Exception:
             logger.exception('announce error')
+        # Notify every 10 min
+        await sleep(60*10)
 
-        await asyncio.sleep(10000)
 
+@dome.expose()
+async def __status(**params):
+    """
+    Service status
+    """
+    
+    return {'methods': dome.methods.roles_tups}

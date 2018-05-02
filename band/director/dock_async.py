@@ -22,6 +22,7 @@ https://docs.docker.com/engine/api/v1.24/#31-containers
 
 tar_image_cmd = ['tar', '-c', '-X', '.dockerignore', '.', '-C']
 
+
 def underdict(obj):
     if isinstance(obj, dict):
         new_dict = {}
@@ -34,9 +35,11 @@ def underdict(obj):
     else:
         return obj
 
+
 def inject_attrs(cont):
     attrs = underdict(cont._container)
-    attrs['name'] = (attrs['name'] if 'name' in attrs else attrs['names'][0]).strip('/')
+    attrs['name'] = (
+        attrs['name'] if 'name' in attrs else attrs['names'][0]).strip('/')
     attrs['short_id'] = attrs['id'][:12]
     if 'state' in attrs and 'status' in attrs['state']:
         attrs['status'] = attrs['state']['status']
@@ -44,6 +47,7 @@ def inject_attrs(cont):
         attrs['labels'] = attrs['config']['labels']
     cont.attrs = Prodict.from_dict(attrs)
     return cont
+
 
 def pack_ports(plist=[]):
     return ':'.join([str(p) for p in plist])
@@ -68,26 +72,22 @@ def image_name(name):
 
 class Dock():
     """
-
     """
 
     def __init__(self, bind_addr, images_path, default_image_path, container_env, **kwargs):
-
         self.dc = aiodocker.Docker()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
-
         self.bind_addr = bind_addr
         self.default_image_path = Path(default_image_path).resolve().as_posix()
         self.container_env = container_env
-
         self.images_path = Path(images_path).resolve().as_posix()
 
     async def inspect_containers(self):
         conts = await self.containers()
-        print(conts)
         for cont in conts.values():
             await self.inspect_container(cont)
+        return list(conts.keys())
 
     async def inspect_container(self, cont):
         logger.info(f"inspecting container {cont.attrs.name}")
@@ -101,6 +101,10 @@ class Dock():
         print(conts)
         return [short_info(cont) for cont in conts.values()]
 
+    async def get(self, name):
+        conts = await self.containers()
+        return conts.get(name, None)
+
     async def containers(self):
         filters = ujson.dumps({
             'label': ['inband=inband']
@@ -108,9 +112,6 @@ class Dock():
         print(filters)
         conts = await self.dc.containers.list(all=True, filters=filters)
         return {(cont.attrs.name): inject_attrs(cont) for cont in conts}
-
-    async def get(self, name):
-        return (await self.containers()).get(name, None)
 
     def allocate_port(self, port=None):
         if port and port in self.available_ports:
@@ -124,17 +125,21 @@ class Dock():
         if name in list(conts.keys()):
             logger.info(f"removing container {name}")
             await conts[name].delete()
-
         return True
 
     async def stop_container(self, name):
         conts = await self.containers()
-
         if name in list(conts.keys()):
-            await conts[name].stop()
             logger.info(f"stopping container {name}")
+            await conts[name].stop()
             return True
 
+    async def restart_container(self, name):
+        conts = await self.containers()
+        if name in list(conts.keys()):
+            logger.info(f"restarting container {name}")
+            await conts[name].restart()
+            return True
 
     async def run_container(self, name, params):
 
@@ -151,7 +156,8 @@ class Dock():
                 'stream': True
             })
 
-            logger.info(f"building image {img_params.tag} from {self.default_image_path}")
+            logger.info(
+                f"building image {img_params.tag} from {self.default_image_path}")
             async for chunk in await self.dc.images.build(**img_params):
                 if isinstance(chunk, dict):
                     if 'aux' in chunk:
@@ -172,7 +178,7 @@ class Dock():
             'Hostname': name,
             'Ports': ports,
             'Labels': def_labels(a_ports=a_ports),
-            'Env': [f"{k}={v}" for k,v in self.container_env.items()],
+            'Env': [f"{k}={v}" for k, v in self.container_env.items()],
             'StopSignal': 'SIGTERM',
             'HostConfig': {
                 'RestartPolicy': {

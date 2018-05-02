@@ -27,8 +27,6 @@ add dev .env file containg
 
     BAND_IMAGES_PATH=.
 
-    # localhost or docker host interface
-
     HOST_BIND_ADDR=127.0.0.1
 
     CONTAINER_HTTP_PORT=8080

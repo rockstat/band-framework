@@ -12,11 +12,9 @@ class Tasks(list):
 
 
 class AsyncRolesMethods(AsyncMethods):
-
     def add_method(self, handler, *args, **kwargs):
         if not hasattr(self, '_roles'):
             self._roles = {}
-
         name = kwargs.get('name', handler.__name__)
         role = kwargs.get('role', None)
         self._roles.update({name: role})
@@ -25,7 +23,6 @@ class AsyncRolesMethods(AsyncMethods):
     def add(self, *args, **kwargs):
         if not hasattr(self, '_roles'):
             self._roles = {}
-
         def inner(handler):
             self.add_method(handler, *args, **kwargs)
             return handler
