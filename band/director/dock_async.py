@@ -62,8 +62,16 @@ def def_labels(a_ports=[]):
 
 
 def short_info(container):
-    return {key: getattr(container.attrs, key)
-            for key in ['short_id', 'name', 'status', 'labels']}
+    if hasattr(container, 'attrs'):
+        inject_attrs(container)
+    ca = container.attrs
+    dic = Prodict.from_dict({key: getattr(container.attrs, key)
+                             for key in ['short_id', 'name', 'status']})
+    dic.ports = []
+    if 'labels' in ca:
+        if 'ports' in ca.labels:
+            dic.ports = unpack_ports(ca.labels.ports)
+    return dic
 
 
 def image_name(name):
@@ -87,7 +95,7 @@ class Dock():
         conts = await self.containers()
         for cont in conts.values():
             await self.inspect_container(cont)
-        return list(conts.keys())
+        return [short_info(cont) for cont in conts.values()]
 
     async def inspect_container(self, cont):
         logger.info(f"inspecting container {cont.attrs.name}")
@@ -98,7 +106,6 @@ class Dock():
 
     async def conts_list(self):
         conts = await self.containers()
-        print(conts)
         return [short_info(cont) for cont in conts.values()]
 
     async def get(self, name):
@@ -109,8 +116,9 @@ class Dock():
         filters = ujson.dumps({
             'label': ['inband=inband']
         })
-        print(filters)
         conts = await self.dc.containers.list(all=True, filters=filters)
+        for cont in conts:
+            await cont.show()
         return {(cont.attrs.name): inject_attrs(cont) for cont in conts}
 
     def allocate_port(self, port=None):
@@ -160,6 +168,7 @@ class Dock():
                 f"building image {img_params.tag} from {self.default_image_path}")
             async for chunk in await self.dc.images.build(**img_params):
                 if isinstance(chunk, dict):
+                    logger.debug(chunk)
                     if 'aux' in chunk:
                         img_id = underdict(chunk['aux'])
                 else:

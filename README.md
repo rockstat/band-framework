@@ -16,6 +16,12 @@ Built on top of asyncio, for communication uses JSON-RPC2 over Redis PubSub so t
 содержит бизнес логику и необходимые данные. 
 Каждый сервис запускается в своем отдельном контейнере
 
+#### Фичи
+
+Автоматическая аллокация портов на хостовой машине
+
+
+
 ## Running (DEV host)
 
 add dev .env file containg

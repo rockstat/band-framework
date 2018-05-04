@@ -19,4 +19,7 @@ aiogram
 #dicts
 python-box
 prodict
+#geodb
+pysyge
+maxminddb
 

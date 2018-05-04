@@ -1,5 +1,9 @@
 from asyncio import sleep
-from .. import (settings, dome, logger, rpc, BAND_SERVICE)
+from time import time
+from datetime import timedelta
+from .. import (settings, dome, logger, rpc, BAND_SERVICE, NOTIFY_ALIVE)
+
+START_AT = round(time()*1000)
 
 
 @dome.tasks.add
@@ -10,8 +14,7 @@ async def promote():
         await sleep(1)
         logger.info('promoting service')
         try:
-            await rpc.request(BAND_SERVICE, 'promote',
-                              name=settings.name)
+            await rpc.notify(BAND_SERVICE, NOTIFY_ALIVE, name=settings.name)
         except Exception:
             logger.exception('announce error')
         # Notify every 10 min
@@ -23,5 +26,12 @@ async def __status(**params):
     """
     Service status
     """
-    
-    return {'methods': dome.methods.roles_tups}
+
+    ms_diff = round(time()*1000 - START_AT)
+    up_time = str(timedelta(ms_diff))
+    return {
+        'app_started': START_AT,
+        'app_uptime': ms_diff,
+        'app_uptime_h': up_time,
+        'methods': dome.methods.roles_tups
+    }

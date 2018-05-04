@@ -30,7 +30,7 @@ class AsyncRolesMethods(AsyncMethods):
 
     @property
     def roles_tups(self):
-        return [(k, role,) for k, role in self._roles.items()]
+        return [(fn, role,) for fn, role in self._roles.items() if not fn.startswith('__')]
 
 
 class Dome:

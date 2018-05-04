@@ -19,6 +19,8 @@ def completely_config(dir='.', conf_band='band.yaml', conf_service='service.yaml
     env = os.environ['ENV'] = os.environ.get('ENV', ENV_DEV)
     name = os.environ['NAME'] = os.getenv('NAME', socket.gethostname())
     
+    load_dotenv(dotenv_path=f"{root}/.env.{name}")
+    
     master = name == BAND_SERVICE
 
     tmplenv = Environment(

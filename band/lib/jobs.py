@@ -10,8 +10,8 @@ async def scheduler_startup(app):
     logger.info('starting scheduler')
     try:
         for task in dome.tasks:
-            print(inspect.iscoroutinefunction(task))
-            print(type(task))
+            # print(inspect.iscoroutinefunction(task))
+            # print(type(task))
             if inspect.iscoroutinefunction(task) == True:
                 task = task()
             await app['scheduler'].spawn(task)

@@ -5,3 +5,4 @@ __pycache__
 band.tar
 .env
 .env.dev
+data/*

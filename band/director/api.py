@@ -4,7 +4,7 @@ from collections import defaultdict
 from prodict import Prodict
 
 from .. import (settings, dome, rpc, logger, app,
-                RESULT_OK, BAND_SERVICE, KERNEL_SERVICE)
+                RESULT_OK, BAND_SERVICE, KERNEL_SERVICE, NOTIFY_ALIVE, REQUEST_STATUS)
 
 from .dock_async import Dock
 
@@ -14,34 +14,50 @@ logger.info('Initializing director api')
 
 class State:
     def __init__(self):
-        self._state = defaultdict(Prodict)
-        self.now = lambda: round(time()*1000)
-        
+        self._state = dict()
+
     def registrations(self):
         res = []
         for name, state in self._state.items():
-            for method, role in state.methods:
-                res.append([name, method, role])
+            if 'methods' in state:
+                for method, role in state.methods:
+                    res.append([name, method, role])
         return res
 
-    def set_methods(self, name, methods):
-        self._state[name].methods = methods
-        self._state[name].ts = self.now()
+    def ensure_struct(self, name):
+        if name not in self._state or not self._state[name]:
+            ms = round(time()*1000)
+            self._state[name] = Prodict(name=name, init=ms, methods=[])
+
+    def set_status(self, name, status):
+        self.ensure_struct(name)
+        self._state[name].update(status)
+    
+    def rm(self, name):
+        self._state[name] = None
+
+    def list_(self):
+        return list(self._state.values())
+
+    def ls(self):
+        return {s.name: s.status for s in self._state.values()}
 
     async def notify_kernel(self):
         methods = self.registrations()
-        await rpc.request(KERNEL_SERVICE, 'service_register', methods=methods)
+        await rpc.notify(KERNEL_SERVICE, '__status_receiver', methods=methods)
+
+    async def add_container(self, name, info={}, check_status=False):
+        self, self.ensure_struct(name)
+        # we don't check containers just started or restarts.
+        # check needed when director started
+        if check_status:
+            await app['scheduler'].spawn(self.ask_state(name))
+        self._state[name].update(info)
         
 
-    async def countainer_found(self, name, info={}):
-        self._state[name].info = info
-        await app['scheduler'].spawn(self.ask_state(name))
-
     async def ask_state(self, name):
-        status = await rpc.request(name, '__status')
-        if 'methods' in status:
-            print(status['methods'])
-            state.set_methods(name, status['methods'])
+        status = await rpc.request(name, REQUEST_STATUS)
+        state.set_status(name, status)
 
 
 state = State()
@@ -49,16 +65,15 @@ state = State()
 
 @dome.tasks.add
 async def warmup_dock():
-    names = await dock.inspect_containers()
-    for name in names:
-        await state.countainer_found(name)
+    for info in await dock.inspect_containers():
+        name = info.pop('name')
+        await state.add_container(name, info, check_status=True)
     await sleep(1)
     await state.notify_kernel()
-    print(state._state)
 
 
 @dome.expose()
-async def __registrations(**params):
+async def __status_request(**params):
     """
     Create and run new container with service
     """
@@ -66,15 +81,18 @@ async def __registrations(**params):
 
 
 @dome.expose(path='/run/{name}')
-async def service_run(name, **params):
+async def run(name, **params):
     """
-    Create and run new container with service
+    Create image and run new container with service
     """
-    return await dock.run_container(name, params)
+    state.rm(name)
+    info = await dock.run_container(name, params)
+    await state.add_container(info.name, info)
+    return info
 
 
-@dome.expose(path='/promote')
-async def promote(*, name):
+@dome.expose(name=NOTIFY_ALIVE)
+async def iamalive(name, **params):
     """
     Accept services promotions
     """
@@ -83,7 +101,7 @@ async def promote(*, name):
 
 
 @dome.expose(path='/show/{name}')
-async def service_ping(name, **params):
+async def show(name, **params):
     """
     Show container details
     """
@@ -91,35 +109,44 @@ async def service_ping(name, **params):
 
 
 @dome.expose()
-async def index(**params):
+async def ls(**params):
     """
-    HTTP endpoint
-    list containers
+    List container and docker status
     """
-    return await dock.conts_list()
+    return state.ls()
 
 
-@dome.expose(path='/ask_status/{name}')
+@dome.expose(name='list')
+async def list_(**params):
+    """
+    Containers with info
+    """
+    return state.list_()
+
+
+@dome.expose(path='/status/{name}')
 async def ask_status(name, **params):
     """
     Ask service status
     """
-    return await rpc.request(name, 'status')
+    return await rpc.request(name, REQUEST_STATUS)
 
 
 @dome.expose(path='/restart/{name}')
-async def restart(name, *params):
+async def restart(name, **params):
     """
     Restart service
     """
+    state.rm(name)
     return await dock.restart_container(name)
 
 
-@dome.expose(path='/remove/{name}')
-async def unload(name, *params):
+@dome.expose(path='/rm/{name}')
+async def remove(name, **params):
     """
     Unload/remove service
     """
+    state.rm(name)
     return await dock.remove_container(name)
 
 
@@ -129,4 +156,5 @@ async def stop(name, **params):
     HTTP endpoint
     stop container
     """
+    state.rm(name)
     return await dock.stop_container(name)

@@ -1,5 +1,5 @@
 from jsonrpcclient.async_client import AsyncClient
-from jsonrpcclient.request import Request
+from jsonrpcclient.request import Request, Notification
 from async_timeout import timeout
 from collections import namedtuple
 import asyncio
@@ -19,8 +19,14 @@ SENDER_POS = 2
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
     __slots__ = ()
 
+    def tos(self):
+        return self.dest + ':' + self.method + ':' + self.source
+
+    def __repr__(self):
+        return self.dest + ':' + self.method + ':' + self.source
+
     @classmethod
-    def make(cls, method: str):
+    def make(cls, method):
         return cls._make(method.split(':'))
 
 
@@ -47,7 +53,7 @@ class RedisPubSubRPC(AsyncClient):
             if 'id' in msg and msg['id'] in self.pending:
                 self.pending[msg['id']].set_result(msg)
         # call to served methods
-        elif 'params' in msg and 'id' in msg:
+        elif 'params' in msg:
             # check address structure
             mcall = MethodCall.make(msg['method'])
             if mcall.dest == self.name:
@@ -84,12 +90,30 @@ class RedisPubSubRPC(AsyncClient):
                     await sub.unsubscribe(ch.name)
                     await sub.quit()
 
+    async def request(self, to, method, **params):
+        mc = MethodCall(dest=to, method=method, source=self.name)
+        req_id = str(next(self.id_gen))
+        req = Request(mc.tos(), params, request_id=req_id)
+        return await self.send(req, request_id=req['id'], to=to)
+
+    async def notify(self, to, method, **params):
+        mc = MethodCall(dest=to, method=method, source=self.name)
+        req = Notification(mc.tos(), **params)
+        return await self.send(req, to=to)
+
+    async def put(self, dest, data):
+        await self.queue.put((dest, data,))
+
     async def send_message(self, request, **kwargs):
-        req_id = kwargs['request_id']
         to = kwargs['to']
         # Outbound msgs queue
+
         await self.put(to, request.encode())
+        # skip waiting for notification
+        if 'request_id' not in kwargs:
+            return
         # Waiting for response
+        req_id = kwargs['request_id']
         try:
             req = self.pending[req_id] = asyncio.Future()
             # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
@@ -102,14 +126,6 @@ class RedisPubSubRPC(AsyncClient):
 
         # Retunrning result
         return None if cm.expired else self.process_response(req.result())
-
-    async def request(self, to, method, **params):
-        req_id = str(next(self.id_gen))
-        req = Request(to+':'+method+':'+self.name, params, request_id=req_id)
-        return await self.send(req, request_id=req['id'], to=to)
-
-    async def put(self, dest, data):
-        await self.queue.put((dest, data,))
 
     async def writer(self, app):
         try:
