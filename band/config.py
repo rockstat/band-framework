@@ -11,16 +11,17 @@ from .log import logger
 from .constants import BAND_SERVICE, ENV_DEV, ENV_PROD
 
 
-def completely_config(dir='.', conf_band='band.yaml', conf_service='service.yaml', env_fn='.env', dev_env_fn='.env.dev'):
+def completely_config(dir='.', conf_band='band.yaml', conf_service='service.yaml',
+                      env_fn='.env', dev_env_fn='.env.dev', env_common_fn='.env.common'):
+
     root = Path(os.getcwd())
     load_dotenv(dotenv_path=root/env_fn)
     load_dotenv(dotenv_path=root/dev_env_fn)
+    load_dotenv(dotenv_path=root/env_common_fn)
 
     env = os.environ['ENV'] = os.environ.get('ENV', ENV_DEV)
     name = os.environ['NAME'] = os.getenv('NAME', socket.gethostname())
-    
-    load_dotenv(dotenv_path=f"{root}/.env.{name}")
-    
+
     master = name == BAND_SERVICE
 
     tmplenv = Environment(
@@ -35,6 +36,7 @@ def completely_config(dir='.', conf_band='band.yaml', conf_service='service.yaml
         'env': env
     })
     return Prodict.from_dict(data)
+
 
 settings = completely_config()
 

@@ -33,9 +33,10 @@ class AsyncRolesMethods(AsyncMethods):
         return [(fn, role,) for fn, role in self._roles.items() if not fn.startswith('__')]
 
 
+
 class Dome:
 
-    NONE = None
+    NONE = 'none'
     TASK = 'task'
     LISTENER = 'listener'
     HANDLER = 'handler'
@@ -47,7 +48,8 @@ class Dome:
         self._routes = []
         self._methods = AsyncRolesMethods()
 
-    def expose_method(self, handler, role=None, path=None, **kwargs):
+    def expose_method(self, handler, path=None, **kwargs):
+        role = kwargs.pop('role', self.NONE)
         name = kwargs.get('name', handler.__name__)
         if path is None:
             path = '/{}'.format(name)

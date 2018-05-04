@@ -12,3 +12,5 @@ proxy_checker:
   regions: {{ENDPOINT_REGION_LIST}}
   auth: {{ENDPOINT_AUTH}}
   notify: {{PROXY_CHECK_NOTIFY}}
+
+rucaptcha_key: {{RUCAPTCHA_KEY}}

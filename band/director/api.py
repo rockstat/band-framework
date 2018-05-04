@@ -32,7 +32,7 @@ class State:
     def set_status(self, name, status):
         self.ensure_struct(name)
         self._state[name].update(status)
-    
+
     def rm(self, name):
         self._state[name] = None
 
@@ -53,7 +53,6 @@ class State:
         if check_status:
             await app['scheduler'].spawn(self.ask_state(name))
         self._state[name].update(info)
-        
 
     async def ask_state(self, name):
         status = await rpc.request(name, REQUEST_STATUS)
@@ -78,17 +77,6 @@ async def __status_request(**params):
     Create and run new container with service
     """
     await app['scheduler'].spawn(state.notify_kernel())
-
-
-@dome.expose(path='/run/{name}')
-async def run(name, **params):
-    """
-    Create image and run new container with service
-    """
-    state.rm(name)
-    info = await dock.run_container(name, params)
-    await state.add_container(info.name, info)
-    return info
 
 
 @dome.expose(name=NOTIFY_ALIVE)
@@ -130,6 +118,25 @@ async def ask_status(name, **params):
     Ask service status
     """
     return await rpc.request(name, REQUEST_STATUS)
+
+
+@dome.expose(path='/call/{name}/{method}')
+async def call(name, method, **params):
+    """
+    Call service method
+    """
+    return await rpc.request(name, method)
+
+
+@dome.expose(path='/run/{name}')
+async def run(name, **params):
+    """
+    Create image and run new container with service
+    """
+    state.rm(name)
+    info = await dock.run_container(name, params)
+    await state.add_container(info.name, info)
+    return info
 
 
 @dome.expose(path='/restart/{name}')

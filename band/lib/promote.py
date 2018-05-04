@@ -28,7 +28,7 @@ async def __status(**params):
     """
 
     ms_diff = round(time()*1000 - START_AT)
-    up_time = str(timedelta(ms_diff))
+    up_time = str(timedelta(milliseconds=ms_diff))
     return {
         'app_started': START_AT,
         'app_uptime': ms_diff,

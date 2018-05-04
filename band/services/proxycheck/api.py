@@ -4,6 +4,7 @@ import aiohttp
 from aiohttp import ClientConnectorError
 import asyncio
 import aiojobs
+from collections import Counter
 from random import random
 from prodict import Prodict
 from band import app, dome, logger, settings, RESULT_INTERNAL_ERROR, RESULT_NOT_LOADED_YET
@@ -32,11 +33,11 @@ class State(dict):
             'success': self.success
         }
 
-
 state = State()
 test_url = 'https://m.vk.com/'
 check_ip = 'https://ipinfo.io/ip'
 copyattrs = 'geoId id host port user type usage geoId alias status'.split(' ')
+CONCURRENT_CHECKS = 3
 
 """
 
@@ -79,7 +80,7 @@ async def chech(p, params):
 
 @dome.tasks.add
 async def checker():
-    scheduler = await aiojobs.create_scheduler(limit=10)
+    scheduler = await aiojobs.create_scheduler(limit=CONCURRENT_CHECKS)
     while True:
         state.myloop()
         try:
@@ -101,7 +102,7 @@ async def checker():
 
 
 @dome.expose()
-async def progress(ip, **params):
+async def progress(**params):
     try:
         return {'result': state.myget()}
     except Exception:
