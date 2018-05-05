@@ -6,7 +6,8 @@ bind_addr: {{ HOST_BIND_ADDR }}
 http_port: {{ BAND_HTTP_PORT }}
 redis_dsn: {{ REDIS_DSN }}
 default_image_path: .
-images_path: {{ BAND_IMAGES_PATH }}
+base_image_path: .
+services_path: {{ BAND_SERVICES_PATH }}
 
 container_env:
   'BAND': {{ BAND_URL }}

@@ -8,10 +8,10 @@ uvloop
 asyncio
 aiohttp
 aioredis
-aiojobs
 jsonrpcserver 
 git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient
 aiofiles
 aiojobs
 aiodocker
 prodict
+requests

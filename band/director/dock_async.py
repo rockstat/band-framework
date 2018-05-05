@@ -1,5 +1,4 @@
 from pathlib import Path
-# import docker
 import aiofiles
 import asyncio
 from inflection import underscore
@@ -7,9 +6,9 @@ import aiodocker
 import os
 import re
 from prodict import Prodict
-from box import Box
 import ujson
 import subprocess
+from pprint import pprint
 from .. import logger
 
 """
@@ -20,7 +19,9 @@ https://docs.docker.com/engine/api/v1.37/#operation/ContainerList
 https://docs.docker.com/engine/api/v1.24/#31-containers
 """
 
-tar_image_cmd = ['tar', '-c', '-X', '.dockerignore', '.', '-C']
+
+def tar_image_cmd(path):
+    return ['tar', '-C', path, '-c', '-X', '.dockerignore', '.']
 
 
 def underdict(obj):
@@ -58,7 +59,7 @@ def unpack_ports(pstr):
 
 
 def def_labels(a_ports=[]):
-    return Box(inband='inband', ports=pack_ports(a_ports))
+    return Prodict(inband='inband', ports=pack_ports(a_ports))
 
 
 def short_info(container):
@@ -82,14 +83,16 @@ class Dock():
     """
     """
 
-    def __init__(self, bind_addr, images_path, default_image_path, container_env, **kwargs):
+    def __init__(self, bind_addr, services_path, default_image_path, base_image_path, container_env, **kwargs):
         self.dc = aiodocker.Docker()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
         self.bind_addr = bind_addr
         self.default_image_path = Path(default_image_path).resolve().as_posix()
+        self.base_image_path = Path(base_image_path).resolve().as_posix()
+        self.base_image_name = 'rst/band-py'
         self.container_env = container_env
-        self.images_path = Path(images_path).resolve().as_posix()
+        self.services_path = Path(services_path).resolve().as_posix()
 
     async def inspect_containers(self):
         conts = await self.containers()
@@ -149,23 +152,20 @@ class Dock():
             await conts[name].restart()
             return True
 
-    async def run_container(self, name, params):
-
-        img_name = image_name('async-py')
-        img_path = self.default_image_path
+    async def create_image(self, name, path):
         img_id = None
 
-        with subprocess.Popen(tar_image_cmd + [img_path], stdout=subprocess.PIPE) as proc:
+        with subprocess.Popen(tar_image_cmd(path), stdout=subprocess.PIPE) as proc:
             img_params = Prodict.from_dict({
                 'fileobj': proc.stdout,
                 'encoding': 'identity',
-                'tag': img_name,
+                'tag': name,
                 'labels': def_labels(),
                 'stream': True
             })
 
             logger.info(
-                f"building image {img_params.tag} from {self.default_image_path}")
+                f"building image {img_params} from {path}")
             async for chunk in await self.dc.images.build(**img_params):
                 if isinstance(chunk, dict):
                     logger.debug(chunk)
@@ -175,26 +175,42 @@ class Dock():
                     logger.debug('chunk: %s %s', type(chunk), chunk)
             logger.info('image created %s', img_id)
 
-        img = await self.dc.images.get(img_name)
-        img_attrs = Prodict.from_dict(underdict(img))
+        img = await self.dc.images.get(name)
+        return Prodict.from_dict(underdict(img))
 
-        ports = {port: (self.bind_addr, self.allocate_port(),)
-                 for port in img_attrs.container_config.exposed_ports.keys() or {}}
-        a_ports = [port[1] for port in ports.values()]
+    async def run_container(self, name, params):
+
+        await self.create_image(self.base_image_name, self.base_image_path)
+
+        img_name = f'rst/service-{name}'
+        img = await self.create_image(img_name, self.services_path)
+
+        ports = {port: [{'HostIp': self.bind_addr, 'HostPort': str(self.allocate_port())}]
+                 for port in img.container_config.exposed_ports.keys() or {}}
+        a_ports = [port[0]['HostPort'] for port in ports.values()]
+
+        print(pprint(img))
+
+        env = {'NAME': name}
+        env.update(self.container_env)
 
         config = Prodict.from_dict({
-            'Image': img_attrs.repo_tags[0],
+            'Image': img.id,
             'Hostname': name,
+            'Cmd': name,
             'Ports': ports,
             'Labels': def_labels(a_ports=a_ports),
-            'Env': [f"{k}={v}" for k, v in self.container_env.items()],
+            'Env': [f"{k}={v}" for k, v in env.items()],
             'StopSignal': 'SIGTERM',
             'HostConfig': {
                 'RestartPolicy': {
                     'Name': 'unless-stopped'
-                }
+                },
+                'PortBindings': ports
             }
         })
+        
+        print(config)
 
         logger.info(f"starting container {name}. ports: {config.Ports}")
         c = await self.dc.containers.create_or_replace(name, config)

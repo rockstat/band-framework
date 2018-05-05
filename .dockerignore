@@ -2,7 +2,6 @@ __pycache__
 *.DS_Store
 .vscode
 .git/*
-band.tar
 .env
 .env.dev
 data/*

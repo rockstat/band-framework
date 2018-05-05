@@ -1,4 +1,5 @@
 FROM python:3
+LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		wget \
@@ -9,14 +10,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 
 
-WORKDIR /usr/src/app
+WORKDIR /usr/src/band
 
 ENV HOST=0.0.0.0
 ENV PORT=8080
+
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE ${PORT}
 COPY . .
+RUN python setup.py develop
 
 CMD [ "python", "-m", "band"]

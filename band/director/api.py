@@ -125,7 +125,7 @@ async def call(name, method, **params):
     """
     Call service method
     """
-    return await rpc.request(name, method)
+    return await rpc.request(name, method, **params)
 
 
 @dome.expose(path='/run/{name}')

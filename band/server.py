@@ -3,6 +3,7 @@ import uvloop
 import asyncio
 
 from .log import logger
+from . import dome
 
 __all__ = ['add_routes', 'start_server', 'app']
 
@@ -17,6 +18,7 @@ def add_routes(routes):
 
 
 def start_server(http_port, bind_addr, name, **kwargs):
+    add_routes(dome.routes)
 
     web.run_app(app, host=bind_addr,
                 port=http_port, handle_signals=True)
