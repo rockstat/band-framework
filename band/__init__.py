@@ -17,7 +17,8 @@ if settings.master:
     importlib.import_module('band.director', 'band')
 
 else:
-    importlib.import_module(f'band.services.{settings.name}', 'band')
-    importlib.import_module('band.lib.promote', 'band')
+    pass
+    # importlib.import_module(f'band.services.{settings.name}', 'band')
+    # importlib.import_module('band.lib.promote', 'band')
 
 add_routes(dome.routes)

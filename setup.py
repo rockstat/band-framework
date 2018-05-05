@@ -6,8 +6,38 @@ setup(
     author='Dmitry Rodin',
     author_email='madiedinro@gmail.com',
     license='MIT',
-    long_description=__doc__,
-    packages=['band'],
+    description='Python microservices for Rockstat analytics plaform',
+    long_description="""
+About
+---
+Orchestranion module start services in docker containers, examine and send configuraton to the kernell service.
+Includes microserivice framework for easy develop simple services and easy expose by https through kernel.
+More at project documentation
+    """,
+    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    url='https://github.com/rockstat',
     include_package_data=True,
-    zip_safe=False
+    install_requires=['asyncio', 'uvloop', 'aiohttp', 'aioredis',
+                      'aiojobs', 'jsonrpcserver', 'pyyaml', 'inflection', 'jinja2', 'aiodocker'],
+    # extras_require={
+    #     'dev': ['check-manifest'],
+    #     'test': ['coverage'],
+    # },
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+    ],
+    project_urls={  # Optional
+        'Homepage': 'https://rockstat.ru',
+        'Docs': 'https://rockstat.ru/docs'
+    },
+
+    # entry_points={
+    #     'console_scripts': [
+    #         'band = band.__main__:main'
+    #     ]
+    # },
 )

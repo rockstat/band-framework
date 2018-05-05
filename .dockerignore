@@ -6,3 +6,4 @@ band.tar
 .env
 .env.dev
 data/*
+*.egg-info/
