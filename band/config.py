@@ -31,10 +31,11 @@ def completely_config(dir='.', conf='config.yaml',
     data = tmpl.render(**os.environ)
     data = yaml.load(data)
     data.update({
+        # use pre configured or detected service name
         'name': data.get('name', name),
         'env': env
     })
-    
+
     return Prodict.from_dict(data)
 
 
