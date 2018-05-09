@@ -5,9 +5,10 @@ env: {{ ENV }}
 bind_addr: {{ HOST_BIND_ADDR }}
 http_port: {{ BAND_HTTP_PORT }}
 redis_dsn: {{ REDIS_DSN }}
-default_image_path: .
 base_image_path: .
-services_path: {{ BAND_SERVICES_PATH }}
+base_image_name: rst/band-base
+def_srv_img_path: {{ BAND_SERVICES_PATH }}
+def_srv_img_name: rst/band-service-base
 
 container_env:
   'BAND': {{ BAND_URL }}

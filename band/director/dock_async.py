@@ -83,16 +83,16 @@ class Dock():
     """
     """
 
-    def __init__(self, bind_addr, services_path, default_image_path, base_image_path, container_env, **kwargs):
+    def __init__(self, bind_addr, def_srv_img_path, def_srv_img_name, base_image_path, base_image_name, container_env, **kwargs):
         self.dc = aiodocker.Docker()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
         self.bind_addr = bind_addr
-        self.default_image_path = Path(default_image_path).resolve().as_posix()
         self.base_image_path = Path(base_image_path).resolve().as_posix()
-        self.base_image_name = 'rst/band-py'
+        self.base_image_name = base_image_name
         self.container_env = container_env
-        self.services_path = Path(services_path).resolve().as_posix()
+        self.def_srv_img_path = Path(def_srv_img_path).resolve().as_posix()
+        self.def_srv_img_name = def_srv_img_name
 
     async def inspect_containers(self):
         conts = await self.containers()
@@ -180,16 +180,22 @@ class Dock():
 
     async def run_container(self, name, params):
 
-        await self.create_image(self.base_image_name, self.base_image_path)
-
-        img_name = f'rst/service-{name}'
-        img = await self.create_image(img_name, self.services_path)
+        # build custom images
+        if False:
+            img_name = f'rst/service-{name}'
+            img_path = ''
+        else:
+            # rebuild base image
+            await self.create_image(self.base_image_name, self.base_image_path)
+            # params for service image
+            img_name = self.def_srv_img_name
+            img_path = self.def_srv_img_path
+        
+        img = await self.create_image(img_name, img_path)
 
         ports = {port: [{'HostIp': self.bind_addr, 'HostPort': str(self.allocate_port())}]
                  for port in img.container_config.exposed_ports.keys() or {}}
         a_ports = [port[0]['HostPort'] for port in ports.values()]
-
-        print(pprint(img))
 
         env = {'NAME': name}
         env.update(self.container_env)

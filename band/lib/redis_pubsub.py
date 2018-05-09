@@ -6,6 +6,8 @@ import asyncio
 import ujson
 import itertools
 import aioredis
+from aioredis.pubsub import Receiver
+from aioredis.abc import AbcChannel
 
 from .. import dome, logger
 
@@ -46,7 +48,13 @@ class RedisPubSubRPC(AsyncClient):
         add handling
         {"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": "1"
         """
-
+        # common extension
+        if 'method' in msg:
+            mparts = msg['method'].split(':')
+            if len(mparts) == 3:
+                msg['to'] = mparts[0]
+                msg['method'] = mparts[1]
+                msg['from'] = mparts[2]
         # answer
         if 'result' in msg:
             # logger.debug('received with result: %s', msg)
@@ -55,21 +63,23 @@ class RedisPubSubRPC(AsyncClient):
         # call to served methods
         elif 'params' in msg:
             # check address structure
-            mcall = MethodCall.make(msg['method'])
-            if mcall.dest == self.name:
-                msg['method'] = mcall.method
+            if msg['to'] == self.name or msg['to'] == 'any':
                 response = await dome.methods.dispatch(msg)
                 if not response.is_notification:
-                    await self.put(mcall.source, ujson.dumps(response))
+                    await self.put(msg['from'], ujson.dumps(response))
 
-    async def reader(self, app):
+    async def reader(self, app, pool):
         while True:
             try:
-                sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
-                ch, *_ = await sub.subscribe(self.name)
+                # default sub
+                # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
+                await pool.subscribe(app['mpsc'].channel(self.name))
+                # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
+                # ch, *_ = await sub.subscribe(self.name)
                 logger.info('redis_rpc_reader: entering loop')
-                while await ch.wait_message():
-                    msg = await ch.get(encoding='utf-8')
+                async for ch, msg in app['mpsc'].iter():
+                    # while await ch.wait_message():
+                    # msg = await ch.get(encoding='utf-8')
                     try:
                         msg = ujson.loads(msg)
                         await app['scheduler'].spawn(self.dispatch(msg))
@@ -86,9 +96,9 @@ class RedisPubSubRPC(AsyncClient):
                 logger.exception('redis_rpc_reader: unknown error')
                 await asyncio.sleep(1)
             finally:
-                if not sub.closed:
-                    await sub.unsubscribe(ch.name)
-                    await sub.quit()
+                if not pool.closed:
+                    await pool.unsubscribe(ch.name)
+                    await pool.quit()
 
     async def request(self, to, method, **params):
         mc = MethodCall(dest=to, method=method, source=self.name)
@@ -127,16 +137,16 @@ class RedisPubSubRPC(AsyncClient):
         # Retunrning result
         return None if cm.expired else self.process_response(req.result())
 
-    async def writer(self, app):
+    async def writer(self, app, pool):
         try:
-            pub = await aioredis.create_redis_pool(self.redis_dsn, loop=app.loop)
+            # pub = await aioredis.create_redis_pool(self.redis_dsn, loop=app.loop)
             logger.info('redis_rpc_writer: entering loop')
             while True:
                 name, msg = await self.queue.get()
                 self.queue.task_done()
                 # logger.debug('publishing to %s: %s', name, msg)
                 try:
-                    await pub.publish(name, msg)
+                    await pool.publish(name, msg)
                 except Exception as error:
                     logger.error('redis_rpc_writer: error %s', error)
 
@@ -144,7 +154,7 @@ class RedisPubSubRPC(AsyncClient):
             logger.info('redis_rpc_writer: cancelled')
             pass
         finally:
-            await pub.quit()
+            await pool.quit()
 
     async def get(self):
         item = await self.queue.get()
@@ -155,8 +165,9 @@ class RedisPubSubRPC(AsyncClient):
 
 
 async def redis_rpc_startup(app):
-    app['rrpc_w'] = app.loop.create_task(app['rpc'].writer(app))
-    app['rrpc_r'] = app.loop.create_task(app['rpc'].reader(app))
+    redis = app['rpool'] = await aioredis.create_redis_pool(app['rpc'].redis_dsn, loop=app.loop)
+    app['rrpc_w'] = app.loop.create_task(app['rpc'].writer(app, redis))
+    app['rrpc_r'] = app.loop.create_task(app['rpc'].reader(app, redis))
 
 
 async def redis_rpc_cleanup(app):
@@ -167,6 +178,8 @@ async def redis_rpc_cleanup(app):
 
 def attach_redis_rpc(app, name, **kwargs):
     rpc = app['rpc'] = RedisPubSubRPC(name=name, **kwargs)
+    app['mpsc'] = Receiver(loop=app.loop)
+
     app.on_startup.append(redis_rpc_startup)
     app.on_shutdown.append(redis_rpc_cleanup)
     return rpc

@@ -35,6 +35,7 @@ def completely_config(dir='.', conf='config.yaml',
         'name': data.get('name', name),
         'env': env
     })
+    data.update(data.pop(data['name'], {}))
 
     return Prodict.from_dict(data)
 

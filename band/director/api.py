@@ -1,6 +1,7 @@
 from asyncio import sleep
 from time import time
 from collections import defaultdict
+from itertools import count
 from prodict import Prodict
 
 from .. import (settings, dome, rpc, logger, app,
@@ -73,7 +74,7 @@ class State:
             await self.stop_container(name)
         self.unregister(name)
         info = await dock.run_container(name, params)
-        self.add_container(name, info)
+        await self.add_container(name, info)
 
     async def add_container(self, name, info={}):
         self.ensure_struct(name)
@@ -100,14 +101,12 @@ OK = {'result': RESULT_OK}
 
 @dome.tasks.add
 async def warmup_dock():
-    l = 0
-    while True:
-        for info in await dock.inspect_containers():
-            name = info.pop('name')
-            await state.add_container(name, info)
-        if l == 0:
+    for num in count():
+        if num == 0:
+            for info in await dock.inspect_containers():
+                name = info.pop('name')
+                await state.add_container(name, info)
             await state.examine_containers()
-        l += 1
         await sleep(30)
         
 
