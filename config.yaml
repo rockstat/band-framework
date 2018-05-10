@@ -2,8 +2,8 @@
 name: {{ NAME }}
 env: {{ ENV }}
 
-bind_addr: {{ HOST_BIND_ADDR }}
-http_port: {{ BAND_HTTP_PORT }}
+bind_addr: {{ HOST_BIND_ADDR or '0.0.0.0' }}
+http_port: {{ BAND_HTTP_PORT or '8080' }}
 redis_dsn: {{ REDIS_DSN }}
 base_image_path: .
 base_image_name: rst/band-base

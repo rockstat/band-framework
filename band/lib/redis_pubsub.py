@@ -46,7 +46,7 @@ class RedisPubSubRPC(AsyncClient):
     async def dispatch(self, msg):
         """
         add handling
-        {"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": "1"
+        {"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": "1"}
         """
         # common extension
         if 'method' in msg:
@@ -69,6 +69,7 @@ class RedisPubSubRPC(AsyncClient):
                     await self.put(msg['from'], ujson.dumps(response))
 
     async def reader(self, app, pool):
+        logger.info('redis_rpc_reader: entering connect loop')
         while True:
             try:
                 # default sub
@@ -76,7 +77,7 @@ class RedisPubSubRPC(AsyncClient):
                 await pool.subscribe(app['mpsc'].channel(self.name))
                 # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
                 # ch, *_ = await sub.subscribe(self.name)
-                logger.info('redis_rpc_reader: entering loop')
+                logger.info('redis_rpc_reader: entering read loop')
                 async for ch, msg in app['mpsc'].iter():
                     # while await ch.wait_message():
                     # msg = await ch.get(encoding='utf-8')
@@ -84,8 +85,7 @@ class RedisPubSubRPC(AsyncClient):
                         msg = ujson.loads(msg)
                         await app['scheduler'].spawn(self.dispatch(msg))
                     except Exception:
-                        logger.exception(
-                            'redis_rpc_reader: dispatching error')
+                        logger.exception('redis_rpc_reader: dispatching error')
             except aioredis.ConnectionClosedError:
                 logger.exception('redis_rpc_reader: connection closed')
                 await asyncio.sleep(1)
@@ -96,6 +96,7 @@ class RedisPubSubRPC(AsyncClient):
                 logger.exception('redis_rpc_reader: unknown error')
                 await asyncio.sleep(1)
             finally:
+                logger.exception('redis_rpc_reader: finally')
                 if not pool.closed:
                     await pool.unsubscribe(ch.name)
                     await pool.quit()
