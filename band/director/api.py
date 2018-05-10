@@ -76,6 +76,7 @@ class State:
         self.unregister(name)
         info = await dock.run_container(name, params)
         await self.add_container(name, info)
+        return info
 
     async def add_container(self, name, info={}):
         self.ensure_struct(name)
@@ -112,7 +113,6 @@ async def warmup_dock():
                 await state.add_container(name, info)
             await state.examine_containers()
         await sleep(30)
-        
 
 
 @dome.expose(name=NOTIFY_ALIVE)
@@ -180,14 +180,6 @@ async def restart(name, **params):
     return await state.restart_container(name)
 
 
-@dome.expose(path='/rm/{name}')
-async def remove(name, **params):
-    """
-    Unload/remove service
-    """
-    return await state.remove_container(name)
-
-
 @dome.expose(path='/stop/{name}')
 async def stop(name, **params):
     """
@@ -195,3 +187,11 @@ async def stop(name, **params):
     stop container
     """
     return await state.stop_container(name)
+
+
+@dome.expose(path='/rm/{name}')
+async def remove(name, **params):
+    """
+    Unload/remove service
+    """
+    return await state.remove_container(name)

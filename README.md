@@ -50,13 +50,14 @@ call
 
 ## Run in docker
 
+    IMG_PATH=/Users/user/projects/rockstat/band_images
     docker run -d \
         --name=band --hostname=band \
         --restart=unless-stopped \
         --network custom \
         -p 127.0.0.1:10000:8080 \
-        -v /Users/user/projects/rockstat/band_images:/images \
-        -v /Users/user/projects/rockstat/band:/images/band-base \
+        -v $IMG_PATH/band_collection:/images/band_collection:ro \
+        -v $IMG_PATH/band:/images/band_base:ro \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -e REDIS_HOST=redis \
         -e BAND_URL=http://band:8080 \

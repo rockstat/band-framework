@@ -6,10 +6,13 @@ bind_addr: {{ HOST }}
 http_port: {{ PORT }}
 redis_dsn: redis://{{REDIS_HOST}}:{{REDIS_PORT or '6379'}}
 images_path: {{IMAGES_PATH}}
-base_image_path: {{IMAGES_PATH}}/band_base
-base_image_name: rst/band-base
-def_srv_img_path: {{IMAGES_PATH}}/band_collection
-def_srv_img_name: rst/band-service-base
+images:
+  base:
+    path: {{ BASE_IMG_PATH is defined and BASE_IMG_PATH or (IMAGES_PATH+'/band_base') }}
+    name: rst/band-base
+  collection:
+    path: {{IMAGES_PATH}}/band_collection
+    name: rst/band-service-base
 network: custom
 
 container_env:

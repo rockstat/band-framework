@@ -83,17 +83,15 @@ class Dock():
     """
     """
 
-    def __init__(self, bind_addr, network, def_srv_img_path, def_srv_img_name, base_image_path, base_image_name, container_env, **kwargs):
+    def __init__(self, bind_addr, network, images_path, images, container_env, **kwargs):
         self.dc = aiodocker.Docker()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
         self.bind_addr = bind_addr
         self.network = network
-        self.base_image_path = Path(base_image_path).resolve().as_posix()
-        self.base_image_name = base_image_name
+        self.images_path = images_path
+        self.images = Prodict.from_dict(images)
         self.container_env = container_env
-        self.def_srv_img_path = Path(def_srv_img_path).resolve().as_posix()
-        self.def_srv_img_name = def_srv_img_name
 
     async def inspect_containers(self):
         conts = await self.containers()
@@ -155,6 +153,7 @@ class Dock():
 
     async def create_image(self, name, path):
         img_id = None
+        path = Path(path).resolve()
 
         with subprocess.Popen(tar_image_cmd(path), stdout=subprocess.PIPE) as proc:
             img_params = Prodict.from_dict({
@@ -187,10 +186,10 @@ class Dock():
             img_path = ''
         else:
             # rebuild base image
-            await self.create_image(self.base_image_name, self.base_image_path)
+            await self.create_image(self.images.base.name, self.images.base.path)
             # params for service image
-            img_name = self.def_srv_img_name
-            img_path = self.def_srv_img_path
+            img_name = self.images.collection.name
+            img_path = self.images.collection.path
         
         img = await self.create_image(img_name, img_path)
 
