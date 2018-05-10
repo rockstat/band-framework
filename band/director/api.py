@@ -1,4 +1,5 @@
 from asyncio import sleep
+import asyncio
 from time import time
 from collections import defaultdict
 from itertools import count
@@ -86,9 +87,12 @@ class State:
         await run_task(self.state_changed())
 
     async def examine_container(self, name):
-        status = await rpc.request(name, REQUEST_STATUS)
-        state.set_status(name, status)
-        await run_task(self.state_changed())
+        try:
+            status = await rpc.request(name, REQUEST_STATUS)
+            state.set_status(name, status)
+            await run_task(self.state_changed())
+        except asyncio.TimeoutError:
+            logger.error('TimeoutError in examine_container')
 
     async def examine_containers(self):
         for name in self._state.keys():

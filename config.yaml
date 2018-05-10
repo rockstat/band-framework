@@ -2,14 +2,17 @@
 name: {{ NAME }}
 env: {{ ENV }}
 
-bind_addr: {{ HOST_BIND_ADDR or '0.0.0.0' }}
-http_port: {{ BAND_HTTP_PORT or '8080' }}
-redis_dsn: {{ REDIS_DSN }}
-base_image_path: .
+bind_addr: {{ HOST }}
+http_port: {{ PORT }}
+redis_dsn: redis://{{REDIS_HOST}}:{{REDIS_PORT or '6379'}}
+images_path: {{IMAGES_PATH}}
+base_image_path: {{IMAGES_PATH}}/band_base
 base_image_name: rst/band-base
-def_srv_img_path: {{ BAND_SERVICES_PATH }}
+def_srv_img_path: {{IMAGES_PATH}}/band_collection
 def_srv_img_name: rst/band-service-base
+network: custom
 
 container_env:
-  'BAND': {{ BAND_URL }}
-  'REDIS_DSN': {{ REDIS_DSN }}
+  'BAND_URL': http://band:{{PORT}}
+  'REDIS_HOST': {{REDIS_HOST}}
+  'REDIS_DSN': redis://{{REDIS_HOST}}:{{REDIS_PORT or '6379'}}/{{REDIS_DB or 2}}

@@ -83,11 +83,12 @@ class Dock():
     """
     """
 
-    def __init__(self, bind_addr, def_srv_img_path, def_srv_img_name, base_image_path, base_image_name, container_env, **kwargs):
+    def __init__(self, bind_addr, network, def_srv_img_path, def_srv_img_name, base_image_path, base_image_name, container_env, **kwargs):
         self.dc = aiodocker.Docker()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
         self.bind_addr = bind_addr
+        self.network = network
         self.base_image_path = Path(base_image_path).resolve().as_posix()
         self.base_image_name = base_image_name
         self.container_env = container_env
@@ -212,7 +213,8 @@ class Dock():
                 'RestartPolicy': {
                     'Name': 'unless-stopped'
                 },
-                'PortBindings': ports
+                'PortBindings': ports,
+                'NetworkMode': self.network
             }
         })
         

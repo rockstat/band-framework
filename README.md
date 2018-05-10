@@ -25,11 +25,10 @@ Built on top of asyncio, for communication uses JSON-RPC2 over Redis PubSub so t
 
 add dev .env file containg
 
-    ... plz ask me to take actual version
+    ...
 
 
-host.docker.internal is internal host machine alias in the docker for mac
-
+host.docker.internal is internal host machine alias at docker for mac
 
 running band (by default starting on 10000 port)
 
@@ -49,7 +48,22 @@ call
 
 `http` is executable of httpie library
 
-### Maintain
+## Run in docker
+
+    docker run -d \
+        --name=band --hostname=band \
+        --restart=unless-stopped \
+        --network custom \
+        -p 127.0.0.1:10000:8080 \
+        -v /Users/user/projects/rockstat/band_images:/images \
+        -v /Users/user/projects/rockstat/band:/images/band-base \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -e REDIS_HOST=redis \
+        -e BAND_URL=http://band:8080 \
+        -e BAND_IMAGES=/images \
+        rst/band
+
+## Maintain
 
 Prune unused docker containers
 

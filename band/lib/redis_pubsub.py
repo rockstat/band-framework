@@ -130,8 +130,8 @@ class RedisPubSubRPC(AsyncClient):
             # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
             async with timeout(5) as cm:
                 await req
-        # except asyncio.TimeoutError:
-        #     logger.error('TimeoutError')
+        except asyncio.CancelledError:
+            logger.error('CancelledError')
         finally:
             del self.pending[req_id]
 
