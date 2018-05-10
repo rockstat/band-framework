@@ -214,7 +214,8 @@ class Dock():
                     'Name': 'unless-stopped'
                 },
                 'PortBindings': ports,
-                'NetworkMode': self.network
+                'NetworkMode': self.network,
+                'Memory': 350*1024*1024
             }
         })
         
