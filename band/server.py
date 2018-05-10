@@ -17,9 +17,10 @@ def add_routes(routes):
     app.router.add_routes(routes)
 
 
-def start_server(http_port, bind_addr, name, **kwargs):
+def start_server(listen, name, **kwargs):
+    host, port = listen.split(':')
     add_routes(dome.routes)
 
-    web.run_app(app, host=bind_addr,
-                port=http_port, handle_signals=True)
+    web.run_app(app, host=host,
+                port=port, handle_signals=True)
 

@@ -2,6 +2,7 @@ from jinja2 import Environment, FileSystemLoader, Template
 from collections import namedtuple
 from dotenv import load_dotenv
 from pathlib import Path
+from pprint import pprint
 import socket
 import yaml
 import os
@@ -39,8 +40,10 @@ def completely_config(dir='.', conf='config.yaml',
 
     return Prodict.from_dict(data)
 
-
-settings = completely_config()
+try:
+    settings = completely_config()
+except Exception:
+    logger.exception('config')
 
 logger.info('pid: %s', os.getpid())
 logger.info('cwd:%s', os.getcwd())

@@ -88,12 +88,10 @@ class State:
         await run_task(self.state_changed())
 
     async def examine_container(self, name):
-        try:
-            status = await rpc.request(name, REQUEST_STATUS)
+        status = await rpc.request(name, REQUEST_STATUS)
+        if status:
             state.set_status(name, status)
             await run_task(self.state_changed())
-        except asyncio.TimeoutError:
-            logger.error('TimeoutError in examine_container')
 
     async def examine_containers(self):
         for name in self._state.keys():

@@ -33,13 +33,17 @@ class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
 
 
 class RedisPubSubRPC(AsyncClient):
-    def __init__(self, name, redis_dsn, endpoint='none', **kwargs):
+    def __init__(self, name, app, redis_dsn, endpoint='none', **kwargs):
         super(RedisPubSubRPC, self).__init__(endpoint)
         self.name = name
+        self._app = app
+        self._loop = app.loop
         self.pending = {}
         self.redis_dsn = redis_dsn
         self.queue = asyncio.Queue()
         self.timeout = 5
+        self._pool = None
+        self._mpsc = None
 
         self.id_gen = itertools.count(1)
 
@@ -68,22 +72,35 @@ class RedisPubSubRPC(AsyncClient):
                 if not response.is_notification:
                     await self.put(msg['from'], ujson.dumps(response))
 
-    async def reader(self, app, pool):
+    async def pool(self):
+        if self._pool is None:
+            logger.info('creating redis pool')
+            self._pool = await aioredis.create_redis_pool(self.redis_dsn, loop=self._loop)
+        return self._pool
+    
+    def mpsc(self):
+        if self._mpsc is None:
+            self._mpsc = Receiver(loop=self._loop)
+        return self._mpsc
+
+    async def reader(self):
         logger.info('redis_rpc_reader: entering connect loop')
         while True:
             try:
                 # default sub
+                pool = await self.pool()
+                mpsc = self.mpsc()
                 # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
-                await pool.subscribe(app['mpsc'].channel(self.name))
+                await pool.subscribe(mpsc.channel(self.name))
                 # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
                 # ch, *_ = await sub.subscribe(self.name)
                 logger.info('redis_rpc_reader: entering read loop')
-                async for ch, msg in app['mpsc'].iter():
+                async for ch, msg in mpsc.iter():
                     # while await ch.wait_message():
                     # msg = await ch.get(encoding='utf-8')
                     try:
                         msg = ujson.loads(msg)
-                        await app['scheduler'].spawn(self.dispatch(msg))
+                        await self._app['scheduler'].spawn(self.dispatch(msg))
                     except Exception:
                         logger.exception('redis_rpc_reader: dispatching error')
             except aioredis.ConnectionClosedError:
@@ -96,8 +113,9 @@ class RedisPubSubRPC(AsyncClient):
                 logger.exception('redis_rpc_reader: unknown error')
                 await asyncio.sleep(1)
             finally:
-                logger.exception('redis_rpc_reader: finally')
+                logger.debug('redis_rpc_reader: finally')
                 if not pool.closed:
+                    logger.debug('redis_rpc_reader: closing connection')
                     await pool.unsubscribe(ch.name)
                     await pool.quit()
 
@@ -118,7 +136,6 @@ class RedisPubSubRPC(AsyncClient):
     async def send_message(self, request, **kwargs):
         to = kwargs['to']
         # Outbound msgs queue
-
         await self.put(to, request.encode())
         # skip waiting for notification
         if 'request_id' not in kwargs:
@@ -130,6 +147,8 @@ class RedisPubSubRPC(AsyncClient):
             # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
             async with timeout(5) as cm:
                 await req
+        except asyncio.TimeoutError:
+            logger.error('rpc.send_message TimeoutError. to: %s ; id %s', to, req_id)
         except asyncio.CancelledError:
             logger.error('CancelledError')
         finally:
@@ -138,24 +157,30 @@ class RedisPubSubRPC(AsyncClient):
         # Retunrning result
         return None if cm.expired else self.process_response(req.result())
 
-    async def writer(self, app, pool):
-        try:
-            # pub = await aioredis.create_redis_pool(self.redis_dsn, loop=app.loop)
-            logger.info('redis_rpc_writer: entering loop')
-            while True:
-                name, msg = await self.queue.get()
-                self.queue.task_done()
-                # logger.debug('publishing to %s: %s', name, msg)
-                try:
-                    await pool.publish(name, msg)
-                except Exception as error:
-                    logger.error('redis_rpc_writer: error %s', error)
+    async def writer(self):
+        while True:
+            logger.info('redis_rpc_writer: entered root loop')
+            try:
+                pool = await self.pool()
+                # pub = await aioredis.create_redis_pool(self.redis_dsn, loop=app.loop)
+                logger.info('redis_rpc_writer: entering loop')
+                while True:
+                    name, msg = await self.queue.get()
+                    self.queue.task_done()
+                    # logger.debug('publishing to %s: %s', name, msg)
+                    try:
+                        await pool.publish(name, msg)
+                    except Exception as error:
+                        logger.error('redis_rpc_writer: error %s', error)
 
-        except asyncio.CancelledError:
-            logger.info('redis_rpc_writer: cancelled')
-            pass
-        finally:
-            await pool.quit()
+            except asyncio.CancelledError:
+                logger.info('redis_rpc_writer: cancelled')
+                break
+            except Exception:
+                logger.exception('redis_rpc_writer: unknown')
+            finally:
+                await pool.quit()
+            await asyncio.sleep(1)
 
     async def get(self):
         item = await self.queue.get()
@@ -166,9 +191,8 @@ class RedisPubSubRPC(AsyncClient):
 
 
 async def redis_rpc_startup(app):
-    redis = app['rpool'] = await aioredis.create_redis_pool(app['rpc'].redis_dsn, loop=app.loop)
-    app['rrpc_w'] = app.loop.create_task(app['rpc'].writer(app, redis))
-    app['rrpc_r'] = app.loop.create_task(app['rpc'].reader(app, redis))
+    app['rrpc_w'] = app.loop.create_task(app['rpc'].writer())
+    app['rrpc_r'] = app.loop.create_task(app['rpc'].reader())
 
 
 async def redis_rpc_cleanup(app):
@@ -178,9 +202,7 @@ async def redis_rpc_cleanup(app):
 
 
 def attach_redis_rpc(app, name, **kwargs):
-    rpc = app['rpc'] = RedisPubSubRPC(name=name, **kwargs)
-    app['mpsc'] = Receiver(loop=app.loop)
-
+    rpc = app['rpc'] = RedisPubSubRPC(name=name, app=app, **kwargs)
     app.on_startup.append(redis_rpc_startup)
     app.on_shutdown.append(redis_rpc_cleanup)
     return rpc

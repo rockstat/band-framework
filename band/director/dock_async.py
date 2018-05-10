@@ -83,15 +83,14 @@ class Dock():
     """
     """
 
-    def __init__(self, bind_addr, network, images_path, images, container_env, **kwargs):
+    def __init__(self, images_path, images, container_params, container_env, **kwargs):
         self.dc = aiodocker.Docker()
         self.initial_ports = list(range(8900, 8999))
         self.available_ports = list(self.initial_ports)
-        self.bind_addr = bind_addr
-        self.network = network
         self.images_path = images_path
         self.images = Prodict.from_dict(images)
-        self.container_env = container_env
+        self.container_env = Prodict.from_dict(container_env)
+        self.container_params = Prodict.from_dict(container_params)
 
     async def inspect_containers(self):
         conts = await self.containers()
@@ -164,8 +163,7 @@ class Dock():
                 'stream': True
             })
 
-            logger.info(
-                f"building image {img_params} from {path}")
+            logger.info(f"building image {img_params} from {path}")
             async for chunk in await self.dc.images.build(**img_params):
                 if isinstance(chunk, dict):
                     logger.debug(chunk)
@@ -182,18 +180,23 @@ class Dock():
 
         # build custom images
         if False:
-            img_name = f'rst/service-{name}'
+
             img_path = ''
         else:
             # rebuild base image
             await self.create_image(self.images.base.name, self.images.base.path)
             # params for service image
-            img_name = self.images.collection.name
             img_path = self.images.collection.path
-        
-        img = await self.create_image(img_name, img_path)
 
-        ports = {port: [{'HostIp': self.bind_addr, 'HostPort': str(self.allocate_port())}]
+        # service image
+        service_img_name = f'rst/service-{name}'
+        img = await self.create_image(service_img_name, img_path)
+
+        def take_port(): return {
+            'HostIp': self.container_params.bind_ip,
+            'HostPort': str(self.allocate_port())}
+
+        ports = {port: [take_port()]
                  for port in img.container_config.exposed_ports.keys() or {}}
         a_ports = [port[0]['HostPort'] for port in ports.values()]
 
@@ -209,15 +212,13 @@ class Dock():
             'Env': [f"{k}={v}" for k, v in env.items()],
             'StopSignal': 'SIGTERM',
             'HostConfig': {
-                'RestartPolicy': {
-                    'Name': 'unless-stopped'
-                },
+                'RestartPolicy': {'Name': 'unless-stopped'},
                 'PortBindings': ports,
-                'NetworkMode': self.network,
-                'Memory': 350*1024*1024
+                'NetworkMode': self.container_params.network,
+                'Memory': self.container_params.memory
             }
         })
-        
+
         print(config)
 
         logger.info(f"starting container {name}. ports: {config.Ports}")
