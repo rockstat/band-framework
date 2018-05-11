@@ -13,12 +13,12 @@ images:
     path: "{{IMAGES_PATH}}/band_collection"
     name: rst/band-service-base
 container_params:
-  network: custom
+  network: "{{NETWORK|default('custom')}}"
   memory: 367001600 # limit 350mb
   bind_ip: "{{BIND_HOST_IP}}"
 
 container_env:
   HOST: '0.0.0.0'
   BAND_URL: "{{BAND_URL|default('http://{{BIND_HOST_IP}}:{{PORT}}')}}"
-  REDIS_HOST: "{{CONT_REDIS_HOST}}"
-  REDIS_DSN: "redis://{{CONT_REDIS_HOST}}:{{REDIS_PORT|default(6379)}}"
+  REDIS_HOST: "{{REDIS_HOST_ISOLATED}}"
+  REDIS_DSN: "redis://{{REDIS_HOST_ISOLATED}}:{{REDIS_PORT|default(6379)}}"
