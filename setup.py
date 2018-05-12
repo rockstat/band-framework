@@ -19,9 +19,10 @@ More at project documentation
     include_package_data=True,
     install_requires=[
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
-        'aiojobs', 'jsonrpcserver',
-        'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient',
-        'pyyaml', 'inflection', 'jinja2', 'aiodocker'
+        'aiojobs', 'aiodocker', 'aiofiles',
+        'jsonrpcserver', 'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient',
+        'python-dotenv', 'pyyaml', 'inflection', 'jinja2',
+        'requests', 'prodict', 'ujson'
     ],
     # extras_require={
     #     'dev': ['check-manifest'],
