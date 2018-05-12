@@ -20,7 +20,7 @@ More at project documentation
     install_requires=[
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
         'aiojobs', 'aiodocker', 'aiofiles',
-        'jsonrpcserver', 'jsonrpcclient',
+        'jsonrpcserver', "git+https://github.com/rockstat/band.git@master#egg=band",
         'python-dotenv', 'pyyaml', 'inflection', 'jinja2',
         'requests', 'prodict', 'ujson'
     ],
