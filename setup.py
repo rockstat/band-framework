@@ -18,12 +18,16 @@ More at project documentation
     url='https://github.com/rockstat',
     include_package_data=True,
     install_requires=[
+        'pyyaml', 'inflection', 'jinja2',
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
         'aiojobs', 'aiodocker', 'aiofiles',
-        'jsonrpcserver', "git+https://github.com/rockstat/band.git@master#egg=band",
-        'python-dotenv', 'pyyaml', 'inflection', 'jinja2',
-        'requests', 'prodict', 'ujson'
+        'jsonrpcserver', "jsonrpcclient",
+        'python-dotenv',
+        'prodict', 'ujson'
     ],
+    dependency_links=[
+        'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient'
+    ]
     # extras_require={
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
