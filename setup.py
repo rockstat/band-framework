@@ -21,12 +21,12 @@ More at project documentation
         'pyyaml', 'inflection', 'jinja2',
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
         'aiojobs', 'aiodocker', 'aiofiles',
-        'jsonrpcserver', "jsonrpcclient==2.6.0",
+        'jsonrpcserver', 'jsonrpcclient', 'requests'
         'python-dotenv',
         'prodict', 'ujson'
     ],
     dependency_links=[
-        'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient-2.6.0'
+        'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient'
     ],
     # extras_require={
     #     'dev': ['check-manifest'],
