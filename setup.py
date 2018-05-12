@@ -20,7 +20,7 @@ More at project documentation
     install_requires=[
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
         'aiojobs', 'aiodocker', 'aiofiles',
-        'jsonrpcserver', 'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient',
+        'jsonrpcserver', 'jsonrpcclient',
         'python-dotenv', 'pyyaml', 'inflection', 'jinja2',
         'requests', 'prodict', 'ujson'
     ],
