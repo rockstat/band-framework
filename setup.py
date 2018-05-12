@@ -21,7 +21,7 @@ More at project documentation
         'pyyaml', 'inflection', 'jinja2',
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
         'aiojobs', 'aiodocker', 'aiofiles',
-        'jsonrpcserver', 'jsonrpcclient', 'requests'
+        'jsonrpcserver', 'jsonrpcclient', 'requests',
         'python-dotenv',
         'prodict', 'ujson'
     ],
