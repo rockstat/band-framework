@@ -27,7 +27,7 @@ More at project documentation
     ],
     dependency_links=[
         'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient'
-    ]
+    ],
     # extras_require={
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
