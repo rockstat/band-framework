@@ -17,12 +17,12 @@ More at project documentation
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     url='https://github.com/rockstat',
     include_package_data=True,
-    # install_requires=[
-    #     'asyncio', 'uvloop', 'aiohttp', 'aioredis',
-    #     'aiojobs', 'jsonrpcserver',
-    #     'jsonrpcclient',
-    #     'pyyaml', 'inflection', 'jinja2', 'aiodocker'
-    # ],
+    install_requires=[
+        'asyncio', 'uvloop', 'aiohttp', 'aioredis',
+        'aiojobs', 'jsonrpcserver',
+        'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient',
+        'pyyaml', 'inflection', 'jinja2', 'aiodocker'
+    ],
     # extras_require={
     #     'dev': ['check-manifest'],
     #     'test': ['coverage'],
