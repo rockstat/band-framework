@@ -64,6 +64,10 @@ call
         -e BAND_IMAGES=/images \
         rst/band
 
+## Deps
+
+in pypi old version of `jsonrpcclient` and should be installed from git `pip install -U git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient`
+
 ## Maintain
 
 Prune unused docker containers

@@ -19,7 +19,7 @@ async def scheduler_startup(app):
         logger.exception('exc')
 
 async def scheduler_cleanup(app):
-    app['scheduler'].close()
+    await app['scheduler'].close()
 
 
 def attach_scheduler(app):
