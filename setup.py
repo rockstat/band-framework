@@ -18,7 +18,7 @@ More at project documentation
     url='https://github.com/rockstat',
     include_package_data=True,
     install_requires=[
-        'pyyaml', 'inflection', 'jinja2',
+        'pyyaml', 'inflection', 'jinja2', 'coloredlogs'
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
         'aiojobs', 'aiodocker', 'aiofiles',
         'jsonrpcserver', 'jsonrpcclient', 'requests',
