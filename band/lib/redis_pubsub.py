@@ -40,6 +40,7 @@ class RedisPubSubRPC(AsyncClient):
         self._loop = app.loop
         self.pending = {}
         self.redis_dsn = redis_dsn
+        self.redis_params = kwargs.get("redis_params", {})
         self.queue = asyncio.Queue()
         self.timeout = 5
         self._pool = None
@@ -92,6 +93,9 @@ class RedisPubSubRPC(AsyncClient):
                 mpsc = self.mpsc()
                 # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
                 await pool.subscribe(mpsc.channel(self.name))
+                if 'listen_all' in self.redis_params and self.redis_params['listen_all'] == True:
+                    logger.info('listen all enabled')
+                    await pool.subscribe(mpsc.channel('any'))
                 # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
                 # ch, *_ = await sub.subscribe(self.name)
                 logger.info('redis_rpc_reader: entering read loop')
