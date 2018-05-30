@@ -1,7 +1,7 @@
 from asyncio import sleep
 from time import time
 from datetime import timedelta
-from .. import (settings, dome, logger, rpc, BAND_SERVICE, NOTIFY_ALIVE)
+from .. import (settings, dome, logger, rpc, DIRECTOR_SERVICE, NOTIFY_ALIVE)
 
 START_AT = round(time()*1000)
 
@@ -14,7 +14,7 @@ async def promote():
         await sleep(1)
         logger.info('promoting service')
         try:
-            await rpc.notify(BAND_SERVICE, NOTIFY_ALIVE, name=settings.name)
+            await rpc.notify(DIRECTOR_SERVICE, NOTIFY_ALIVE, name=settings.name)
         except Exception:
             logger.exception('announce error')
         # Notify every 10 min

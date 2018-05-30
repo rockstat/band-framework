@@ -21,5 +21,3 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE ${PORT}
 COPY . .
 RUN python setup.py develop
-
-CMD [ "python", "-m", "band"]

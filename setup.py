@@ -10,8 +10,8 @@ setup(
     long_description="""
 About
 ---
-Orchestranion module start services in docker containers, examine and send configuraton to the kernell service.
-Includes microserivice framework for easy develop simple services and easy expose by https through kernel.
+Orchestranion module start services in docker containers, examine and send configuraton to the frontier service.
+Includes microserivice framework for easy develop simple services and easy expose by https through frontier.
 More at project documentation
     """,
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
@@ -42,11 +42,5 @@ More at project documentation
     project_urls={  # Optional
         'Homepage': 'https://rockstat.ru',
         'Docs': 'https://rockstat.ru/docs'
-    },
-
-    # entry_points={
-    #     'console_scripts': [
-    #         'band = band.__main__:main'
-    #     ]
-    # },
+    }
 )

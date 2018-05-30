@@ -10,7 +10,7 @@ import sys
 from prodict import Prodict
 
 from .log import logger
-from .constants import BAND_SERVICE, ENV_DEV, ENV_PROD
+from .constants import DIRECTOR_SERVICE, ENV_DEV, ENV_PROD
 
 
 def completely_config(dir='.',

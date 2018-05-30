@@ -32,8 +32,6 @@ host.docker.internal is internal host machine alias at docker for mac
 
 running band (by default starting on 10000 port)
 
-    ./run_band
-
 run service
 
     http get http://localhost:10000/run/tg_hellobot

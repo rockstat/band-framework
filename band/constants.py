@@ -4,7 +4,8 @@ ENV_PROD = 'production'
 
 # Services
 BAND_SERVICE = 'band'
-KERNEL_SERVICE = 'kernel'
+DIRECTOR_SERVICE = 'director'
+FRONTIER_SERVICE = 'frontier'
 
 # Text statuses
 RESULT_OPERATING = 'operating'
