@@ -1,7 +1,5 @@
 import sys
 from . import settings, start_server
-from . import director
-
 
 def main():
     start_server(**settings)

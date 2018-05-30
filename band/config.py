@@ -13,32 +13,28 @@ from .log import logger
 from .constants import BAND_SERVICE, ENV_DEV, ENV_PROD
 
 
-def completely_config(dir='.', conf='config.yaml',
-                      env_fn='.env', env_local_fn='.env.local'):
+def completely_config(dir='.',
+                      conf='config.yaml',
+                      env_fn='.env',
+                      env_local_fn='.env.local'):
 
     root = Path(os.getcwd())
-    load_dotenv(dotenv_path=root/env_fn)
-    load_dotenv(dotenv_path=root/env_local_fn)
+    load_dotenv(dotenv_path=root / env_fn)
+    load_dotenv(dotenv_path=root / env_local_fn)
 
     env = os.environ['ENV'] = os.environ.get('ENV', ENV_DEV)
-    name = os.environ['NAME'] = os.getenv('NAME', socket.gethostname())
-
-    print(__package__)
-
-    tmplenv = Environment(
-        loader=FileSystemLoader(str(root))
-    )
+    name_env = os.environ['NAME'] = os.getenv('NAME', socket.gethostname())
+    tmplenv = Environment(loader=FileSystemLoader(str(root)))
     tmpl = tmplenv.get_template(conf)
     data = tmpl.render(**os.environ)
     data = yaml.load(data)
     data.update({
         # use pre configured or detected service name
-        'name': data.get('name', name),
+        'name': data.get('name', name_env),
         'env': env
     })
-    data.update(data.pop(data['name'], {}))
-
     return Prodict.from_dict(data)
+
 
 try:
     settings = completely_config()

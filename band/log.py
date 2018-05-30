@@ -7,7 +7,7 @@ JSON_FORMAT='{ "loggerName":"%(name)s", "asciTime":"%(asctime)s", "fileName":"%(
 
 
 logger = logging.getLogger(__name__)
-coloredlogs.install(level='DEBUG', fmt=JSON_FORMAT, stream=sys.stdout)
+coloredlogs.install(level='DEBUG',  stream=sys.stdout) #fmt=JSON_FORMAT,
 
 # logger.setLevel(logging.DEBUG)
 # logging.basicConfig(, datefmt='[%H:%M:%S]')

@@ -12,11 +12,13 @@ images:
   collection:
     path: "{{IMAGES_PATH}}/band_collection"
     name: rst/band-service-base
+  user:
+    path: "{{USER_IMAGES_PATH}}"
+
 container_params:
   network: "{{NETWORK|default('custom')}}"
   memory: 367001600 # limit 350mb
   bind_ip: "{{BIND_HOST_IP}}"
-
 container_env:
   HOST: '0.0.0.0'
   BAND_URL: "{{BAND_URL|default('http://{{BIND_HOST_IP}}:{{PORT}}')}}"

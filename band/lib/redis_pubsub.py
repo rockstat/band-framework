@@ -9,8 +9,7 @@ import aioredis
 from aioredis.pubsub import Receiver
 from aioredis.abc import AbcChannel
 
-from .. import dome, logger
-
+from .. import dome, logger, BROADCAST
 
 # Positions in rpc method name
 DEST_POS = 0
@@ -41,6 +40,9 @@ class RedisPubSubRPC(AsyncClient):
         self.pending = {}
         self.redis_dsn = redis_dsn
         self.redis_params = kwargs.get("redis_params", {})
+        self.channels = [self.name]
+        if 'listen_all' in self.redis_params and self.redis_params['listen_all'] == True:
+            self.channels.append(BROADCAST)
         self.queue = asyncio.Queue()
         self.timeout = 5
         self._pool = None
@@ -76,9 +78,10 @@ class RedisPubSubRPC(AsyncClient):
     async def pool(self):
         if self._pool is None:
             logger.info('creating redis pool')
-            self._pool = await aioredis.create_redis_pool(self.redis_dsn, loop=self._loop)
+            self._pool = await aioredis.create_redis_pool(
+                self.redis_dsn, loop=self._loop)
         return self._pool
-    
+
     def mpsc(self):
         if self._mpsc is None:
             self._mpsc = Receiver(loop=self._loop)
@@ -92,10 +95,8 @@ class RedisPubSubRPC(AsyncClient):
                 pool = await self.pool()
                 mpsc = self.mpsc()
                 # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
-                await pool.subscribe(mpsc.channel(self.name))
-                if 'listen_all' in self.redis_params and self.redis_params['listen_all'] == True:
-                    logger.info('listen all enabled')
-                    await pool.subscribe(mpsc.channel('any'))
+                for chan in self.channels:
+                    await pool.subscribe(mpsc.channel(chan))
                 # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
                 # ch, *_ = await sub.subscribe(self.name)
                 logger.info('redis_rpc_reader: entering read loop')
@@ -120,8 +121,13 @@ class RedisPubSubRPC(AsyncClient):
                 logger.debug('redis_rpc_reader: finally')
                 if not pool.closed:
                     logger.debug('redis_rpc_reader: closing connection')
-                    await pool.unsubscribe(ch.name)
+                    for chan in self.channels:
+                        await pool.unsubscribe(chan)
+                    mpsc.stop()
                     await pool.quit()
+                    # await pool.wait_closed()
+                    await asyncio.sleep(1)
+                    break
 
     async def request(self, to, method, **params):
         mc = MethodCall(dest=to, method=method, source=self.name)
@@ -135,7 +141,10 @@ class RedisPubSubRPC(AsyncClient):
         return await self.send(req, to=to)
 
     async def put(self, dest, data):
-        await self.queue.put((dest, data,))
+        await self.queue.put((
+            dest,
+            data,
+        ))
 
     async def send_message(self, request, **kwargs):
         to = kwargs['to']
@@ -152,7 +161,8 @@ class RedisPubSubRPC(AsyncClient):
             async with timeout(5) as cm:
                 await req
         except asyncio.TimeoutError:
-            logger.error('rpc.send_message TimeoutError. to: %s ; id %s', to, req_id)
+            logger.error('rpc.send_message TimeoutError. to: %s ; id %s', to,
+                         req_id)
         except asyncio.CancelledError:
             logger.error('CancelledError')
         finally:
@@ -182,14 +192,16 @@ class RedisPubSubRPC(AsyncClient):
                 break
             except Exception:
                 logger.exception('redis_rpc_writer: unknown')
+                await asyncio.sleep(1)
             finally:
-                await pool.quit()
-            await asyncio.sleep(1)
+                # await pool.quit()
+                break
 
     async def get(self):
         item = await self.queue.get()
         self.queue.task_done()
         return item
+
 
 # Attaching to aiohttp
 
@@ -200,9 +212,10 @@ async def redis_rpc_startup(app):
 
 
 async def redis_rpc_cleanup(app):
-    for key in ['rrpc_r', 'rrpc_w']:
-        app[key].cancel()
-        await app[key]
+    app['rrpc_r'].cancel()
+    await app['rrpc_r']
+    app['rrpc_w'].cancel()
+    await app['rrpc_w']
 
 
 def attach_redis_rpc(app, name, **kwargs):
