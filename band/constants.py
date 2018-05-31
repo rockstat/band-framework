@@ -3,7 +3,6 @@ ENV_DEV = 'development'
 ENV_PROD = 'production'
 
 # Services
-BAND_SERVICE = 'band'
 DIRECTOR_SERVICE = 'director'
 FRONTIER_SERVICE = 'frontier'
 

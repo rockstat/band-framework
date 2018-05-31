@@ -10,7 +10,7 @@ __all__ = ['add_routes', 'start_server', 'app']
 loop = uvloop.new_event_loop()
 asyncio.set_event_loop(loop)
 
-app = web.Application(loop=loop, logger=logger)
+app = web.Application(logger=logger, debug=False)
 
 
 def add_routes(routes):
@@ -22,5 +22,5 @@ def start_server(listen, name, **kwargs):
     add_routes(dome.routes)
 
     web.run_app(app, host=host,
-                port=port, handle_signals=True)
+                port=port, handle_signals=True, print=None)
 

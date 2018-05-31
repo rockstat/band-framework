@@ -1,8 +1,12 @@
+import jsonrpcserver
 from jsonrpcserver.aio import AsyncMethods
 from aiohttp.web import RouteTableDef, RouteDef
 from .lib.http import resp
-
 from .log import logger
+
+# jsonrpcserver.config.debug = False
+# jsonrpcserver.config.log_requests = False
+# jsonrpcserver.config.log_responses = False
 
 
 class Tasks(list):
@@ -23,15 +27,19 @@ class AsyncRolesMethods(AsyncMethods):
     def add(self, *args, **kwargs):
         if not hasattr(self, '_roles'):
             self._roles = {}
+
         def inner(handler):
             self.add_method(handler, *args, **kwargs)
             return handler
+
         return inner
 
     @property
     def roles_tups(self):
-        return [(fn, role,) for fn, role in self._roles.items() if not fn.startswith('__')]
-
+        return [(
+            fn,
+            role,
+        ) for fn, role in self._roles.items() if not fn.startswith('__')]
 
 
 class Dome:
@@ -75,8 +83,9 @@ class Dome:
 
     def expose(self, *args, **kwargs):
         def inner(handler):
-            self.expose_method(handler, *args,  **kwargs)
+            self.expose_method(handler, *args, **kwargs)
             return handler
+
         return inner
 
     @property
@@ -97,6 +106,5 @@ def smth():
 
 
 dome = Dome()
-
 
 __all__ = ['Dome', 'dome']

@@ -46,6 +46,8 @@ class RedisPubSubRPC(AsyncClient):
         self.queue = asyncio.Queue()
         self.timeout = 5
         self._pool = None
+        self._pool_creating = None
+        self._pool_closing = None
         self._mpsc = None
 
         self.id_gen = itertools.count(1)
@@ -76,16 +78,48 @@ class RedisPubSubRPC(AsyncClient):
                     await self.put(msg['from'], ujson.dumps(response))
 
     async def pool(self):
-        if self._pool is None:
-            logger.info('creating redis pool')
-            self._pool = await aioredis.create_redis_pool(
-                self.redis_dsn, loop=self._loop)
+        if self._pool:
+            return self._pool
+        if self._pool_creating:
+            logger.debug('Pool creating. Waiting')
+            await self._pool_creating.wait()
+            return self._pool
+        self._pool_creating = asyncio.Event()
+        logger.info('creating redis pool')
+        self._pool = await aioredis.create_redis_pool(
+            self.redis_dsn, loop=self._loop)
+        self._pool_creating.set()
         return self._pool
+
+    async def close_pool(self):
+        if not self._pool:
+            return
+        if self._pool_closing:
+            logger.debug('Pool closing. Waiting')
+            await self._pool_closing.wait()
+            return
+        self._pool_closing = asyncio.Event()
+        logger.info('closing redis pool')
+        if not self._pool.closed:
+            logger.debug('unsubsribing...')
+            for chan in self.channels:
+                await self._pool.unsubscribe(chan)
+            logger.debug('calling mpsc stop; pool close...')
+            self._mpsc.stop()
+            self._pool.close()
+            logger.debug('pool wait_closed...')
+            await self._pool.wait_closed()
+            self._pool = None
+            self._pool_closing.set()
 
     def mpsc(self):
         if self._mpsc is None:
+            logger.debug('creating redis receiver')
             self._mpsc = Receiver(loop=self._loop)
         return self._mpsc
+
+    async def close(self):
+        pass
 
     async def reader(self):
         logger.info('redis_rpc_reader: entering connect loop')
@@ -112,22 +146,14 @@ class RedisPubSubRPC(AsyncClient):
                 logger.exception('redis_rpc_reader: connection closed')
                 await asyncio.sleep(1)
             except asyncio.CancelledError:
-                logger.info('redis_rpc_reader: loop cancelled')
+                logger.info('redis_rpc_reader: loop cancelled / call break')
+                await self.close_pool()
                 break
             except Exception:
                 logger.exception('redis_rpc_reader: unknown error')
                 await asyncio.sleep(1)
             finally:
                 logger.debug('redis_rpc_reader: finally')
-                if not pool.closed:
-                    logger.debug('redis_rpc_reader: closing connection')
-                    for chan in self.channels:
-                        await pool.unsubscribe(chan)
-                    mpsc.stop()
-                    await pool.quit()
-                    # await pool.wait_closed()
-                    await asyncio.sleep(1)
-                    break
 
     async def request(self, to, method, **params):
         mc = MethodCall(dest=to, method=method, source=self.name)
@@ -158,7 +184,7 @@ class RedisPubSubRPC(AsyncClient):
         try:
             req = self.pending[req_id] = asyncio.Future()
             # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
-            async with timeout(5) as cm:
+            async with timeout(2) as cm:
                 await req
         except asyncio.TimeoutError:
             logger.error('rpc.send_message TimeoutError. to: %s ; id %s', to,
@@ -188,14 +214,14 @@ class RedisPubSubRPC(AsyncClient):
                         logger.error('redis_rpc_writer: error %s', error)
 
             except asyncio.CancelledError:
-                logger.info('redis_rpc_writer: cancelled')
+                logger.info('redis_rpc_writer: cancelled / break')
+                await self.close_pool()
                 break
             except Exception:
                 logger.exception('redis_rpc_writer: unknown')
                 await asyncio.sleep(1)
             finally:
-                # await pool.quit()
-                break
+                pass
 
     async def get(self):
         item = await self.queue.get()
