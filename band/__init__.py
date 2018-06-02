@@ -7,7 +7,7 @@ from .lib.http import resp
 from .config import settings
 from .dome import dome
 from .server import app, start_server, add_routes
-from .lib.jobs import attach_scheduler
+from .lib.jobs import attach_scheduler, run_task
 from .lib.redis_pubsub import attach_redis_rpc
 
 rpc = attach_redis_rpc(app, **settings)

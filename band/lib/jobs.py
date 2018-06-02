@@ -2,27 +2,37 @@ import aiojobs
 import inspect
 from .. import dome, logger
 
-__all__ = ['attach_scheduler']
+__all__ = ['attach_scheduler', 'run_task']
 
 
 async def scheduler_startup(app):
-    app['scheduler'] = await aiojobs.create_scheduler()
     logger.info('starting scheduler')
-    try:
-        for task in dome.tasks:
-            # print(inspect.iscoroutinefunction(task))
-            # print(type(task))
+    app['scheduler'] = await aiojobs.create_scheduler(exception_handler=None)
+
+    for task in dome.tasks._startup:
+        try:
             if inspect.iscoroutinefunction(task) == True:
                 task = task()
             await app['scheduler'].spawn(task)
-    except Exception:
-        logger.exception('exc')
+        except Exception:
+            logger.exception('exc')
+
+    for task in dome.tasks._shutdown:
+        try:
+            app.on_shutdown.append(task)
+        except Exception:
+            logger.exception('shutdown')
+
 
 async def scheduler_cleanup(app):
+
     await app['scheduler'].close()
+
+
+async def run_task(coro):
+    return await app['scheduler'].spawn(coro)
 
 
 def attach_scheduler(app):
     app.on_startup.append(scheduler_startup)
     app.on_shutdown.append(scheduler_cleanup)
-

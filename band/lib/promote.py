@@ -17,8 +17,8 @@ async def promote():
             await rpc.notify(DIRECTOR_SERVICE, NOTIFY_ALIVE, name=settings.name)
         except Exception:
             logger.exception('announce error')
-        # Notify every 10 min
-        await sleep(60*10)
+        # Notify every
+        await sleep(30)
 
 
 @dome.expose()

@@ -1,6 +1,8 @@
 import jsonrpcserver
+from collections import deque
 from jsonrpcserver.aio import AsyncMethods
 from aiohttp.web import RouteTableDef, RouteDef
+from prodict import Prodict
 from .lib.http import resp
 from .log import logger
 
@@ -9,9 +11,17 @@ from .log import logger
 # jsonrpcserver.config.log_responses = False
 
 
-class Tasks(list):
+class Tasks():
+    def __init__(self):
+        self._startup = deque()
+        self._shutdown = deque()
+
     def add(self, item):
-        self.append(item)
+        self._startup.append(item)
+        return self
+
+    def shutdown(self, item):
+        self._shutdown.append(item)
         return self
 
 
@@ -55,6 +65,7 @@ class Dome:
         self._router = RouteTableDef()
         self._routes = []
         self._methods = AsyncRolesMethods()
+        self._state = Prodict()
 
     def expose_method(self, handler, path=None, **kwargs):
         role = kwargs.pop('role', self.NONE)
@@ -87,6 +98,16 @@ class Dome:
             return handler
 
         return inner
+
+    def startup(self, *args, **kwargs):
+        self._tasks.add(*args, **kwargs)
+
+    def shutdown(self, *args, **kwargs):
+        self._tasks.shutdown(*args, **kwargs)
+
+    @property
+    def state(self):
+        return self._state
 
     @property
     def methods(self):
