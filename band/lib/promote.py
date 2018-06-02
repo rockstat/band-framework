@@ -33,5 +33,5 @@ async def __status(**params):
         'app_started': START_AT,
         'app_uptime': ms_diff,
         'app_uptime_h': up_time,
-        'methods': dome.methods.roles_tups
+        'methods': dome.methods.tups
     }

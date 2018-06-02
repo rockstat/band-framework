@@ -28,15 +28,15 @@ class Tasks():
 class AsyncRolesMethods(AsyncMethods):
     def add_method(self, handler, *args, **kwargs):
         if not hasattr(self, '_roles'):
-            self._roles = {}
+            self._roles = Prodict()
         name = kwargs.get('name', handler.__name__)
         role = kwargs.get('role', None)
-        self._roles.update({name: role})
-        self.update({name: handler})
+        self._roles[name] = role
+        self[name] = handler
 
     def add(self, *args, **kwargs):
         if not hasattr(self, '_roles'):
-            self._roles = {}
+            self._roles = Prodict()
 
         def inner(handler):
             self.add_method(handler, *args, **kwargs)
@@ -45,7 +45,7 @@ class AsyncRolesMethods(AsyncMethods):
         return inner
 
     @property
-    def roles_tups(self):
+    def tups(self):
         return [(
             fn,
             role,

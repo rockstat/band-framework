@@ -9,6 +9,7 @@ FRONTIER_SERVICE = 'frontier'
 # Text statuses
 RESULT_OPERATING = 'operating'
 RESULT_PONG = 'pong'
+OK = 'o-o-ok'
 RESULT_OK = 'ok'
 RESULT_NOT_FOUND = 'not found'
 RESULT_NOT_LOADED_YET = 'not loaded yet'
