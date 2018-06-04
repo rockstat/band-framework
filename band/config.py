@@ -19,8 +19,8 @@ def completely_config(dir='.',
                       env_local_fn='.env.local'):
 
     root = Path(os.getcwd())
-    load_dotenv(dotenv_path=root / env_fn)
     load_dotenv(dotenv_path=root / env_local_fn)
+    load_dotenv(dotenv_path=root / env_fn)
 
     env = os.environ['ENV'] = os.environ.get('ENV', ENV_DEV)
     name_env = os.environ['NAME'] = os.getenv('NAME', socket.gethostname())
