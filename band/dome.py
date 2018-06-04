@@ -6,6 +6,7 @@ from aiohttp.web import RouteTableDef, RouteDef
 from prodict import Prodict
 from .lib.http import resp
 from .log import logger
+from .lib.structs import MethodRegistration
 
 # jsonrpcserver.config.debug = False
 # jsonrpcserver.config.log_requests = False
@@ -32,7 +33,9 @@ class AsyncRolesMethods(AsyncMethods):
             self._roles = Prodict()
         name = kwargs.get('name', handler.__name__)
         role = kwargs.get('role', None)
-        self._roles[name] = role
+
+        self._roles[name] = MethodRegistration(
+            service=None, method=name, role=role, options=kwargs)
         self[name] = handler
 
     def add(self, *args, **kwargs):
@@ -47,10 +50,12 @@ class AsyncRolesMethods(AsyncMethods):
 
     @property
     def tups(self):
-        return [(
-            fn,
-            role,
-        ) for fn, role in self._roles.items() if not fn.startswith('__')]
+        return [(m.method, m.role) for m in self._roles.items()
+                if not fn.startswith('__')]
+
+    @property
+    def dicts(self):
+        return [m for m in self._roles.items() if not m.name.startswith('__')]
 
 
 class Dome:
