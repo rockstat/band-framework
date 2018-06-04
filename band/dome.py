@@ -1,4 +1,5 @@
 import jsonrpcserver
+import ujson
 from collections import deque
 from jsonrpcserver.aio import AsyncMethods
 from aiohttp.web import RouteTableDef, RouteDef
@@ -82,9 +83,15 @@ class Dome:
             return resp(result)
 
         async def post_handler(request):
-            post = await request.post()
             query = dict(request.query)
-            query.update(post)
+            if request.method == 'POST':
+                if request.content_type == 'application/json':
+                    raw = await request.text()
+                    query.update(ujson.loads(raw))
+                else:
+                    post = await request.post()
+                    query.update(post)
+            # url params
             query.update(request.match_info)
             result = await handler(**query)
             return resp(result)
