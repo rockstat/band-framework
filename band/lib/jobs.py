@@ -5,6 +5,14 @@ from .. import dome, logger
 __all__ = ['attach_scheduler', 'run_task']
 
 
+async def process_shutdown(app):
+    for task in dome.tasks._shutdown:
+        try:
+            await task()
+        except Exception:
+            logger.exception('shutdown')
+
+
 async def scheduler_startup(app):
     logger.info('starting scheduler')
     app['scheduler'] = await aiojobs.create_scheduler(exception_handler=None)
@@ -17,11 +25,7 @@ async def scheduler_startup(app):
         except Exception:
             logger.exception('exc')
 
-    for task in dome.tasks._shutdown:
-        try:
-            app.on_shutdown.append(task)
-        except Exception:
-            logger.exception('shutdown')
+    app.on_shutdown.append(process_shutdown)
 
 
 async def scheduler_cleanup(app):
