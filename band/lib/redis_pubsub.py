@@ -72,7 +72,7 @@ class RedisPubSubRPC(AsyncClient):
         # call to served methods
         elif 'params' in msg:
             # check address structure
-            if msg['to'] == self.name or msg['to'] == 'any':
+            if msg['to'] == self.name or msg['to'] == BROADCAST:
                 response = await dome.methods.dispatch(msg)
                 if not response.is_notification:
                     await self.put(msg['from'], ujson.dumps(response))
@@ -128,15 +128,10 @@ class RedisPubSubRPC(AsyncClient):
                 # default sub
                 pool = await self.pool()
                 mpsc = self.mpsc()
-                # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
                 for chan in self.channels:
                     await pool.subscribe(mpsc.channel(chan))
-                # sub = await aioredis.create_redis(self.redis_dsn, loop=app.loop)
-                # ch, *_ = await sub.subscribe(self.name)
                 logger.info('redis_rpc_reader: entering read loop')
                 async for ch, msg in mpsc.iter():
-                    # while await ch.wait_message():
-                    # msg = await ch.get(encoding='utf-8')
                     try:
                         msg = ujson.loads(msg)
                         await self._app['scheduler'].spawn(self.dispatch(msg))
