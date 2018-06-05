@@ -4,6 +4,7 @@ from collections import deque
 from jsonrpcserver.aio import AsyncMethods
 from aiohttp.web import RouteTableDef, RouteDef
 from prodict import Prodict
+from pprint import pprint
 from .lib.http import resp
 from .log import logger
 from .lib.structs import MethodRegistration
@@ -28,15 +29,15 @@ class Tasks():
 
 
 class AsyncRolesMethods(AsyncMethods):
-    def add_method(self, handler, *args, **kwargs):
+    def add_method(self, handler, register={}, *args, **kwargs):
         if not hasattr(self, '_roles'):
             self._roles = Prodict()
-        name = kwargs.get('name', handler.__name__)
-        role = kwargs.get('role', None)
+        method_name = kwargs.pop('name', handler.__name__)
+        role = kwargs.pop('role', None)
 
-        self._roles[name] = MethodRegistration(
-            service=None, method=name, role=role, options=kwargs)
-        self[name] = handler
+        self._roles[method_name] = MethodRegistration(method=method_name, role=role, options=register)
+        self[method_name] = handler
+
 
     def add(self, *args, **kwargs):
         if not hasattr(self, '_roles'):
@@ -48,14 +49,13 @@ class AsyncRolesMethods(AsyncMethods):
 
         return inner
 
-    @property
-    def tups(self):
-        return [(m.method, m.role) for m in self._roles.items()
-                if not fn.startswith('__')]
+    # @property
+    # def tups(self):
+        # return list(m for m in self._roles.values())
 
     @property
     def dicts(self):
-        return [m for m in self._roles.items() if not m.name.startswith('__')]
+        return list(m for m in self._roles.values() if not m.method.startswith('__'))
 
 
 class Dome:
@@ -73,13 +73,14 @@ class Dome:
         self._methods = AsyncRolesMethods()
         self._state = Prodict()
 
-    def expose_method(self, handler, path=None, **kwargs):
+    def expose_method(self, handler, path=None, register={}, **kwargs):
         role = kwargs.pop('role', self.NONE)
+        routekwargs = kwargs.pop('route', {})
         name = kwargs.get('name', handler.__name__)
         if path is None:
             path = '/{}'.format(name)
 
-        self._methods.add_method(handler, name=name, role=role)
+        self._methods.add_method(handler, name=name, role=role, register=register)
 
         async def get_handler(request):
             query = dict(request.query)
@@ -101,8 +102,8 @@ class Dome:
             result = await handler(**query)
             return resp(result)
 
-        self._routes.append(RouteDef('GET', path, get_handler, kwargs))
-        self._routes.append(RouteDef('POST', path, post_handler, kwargs))
+        self._routes.append(RouteDef('GET', path, get_handler, routekwargs))
+        self._routes.append(RouteDef('POST', path, post_handler, routekwargs))
 
     def expose(self, *args, **kwargs):
         def inner(handler):

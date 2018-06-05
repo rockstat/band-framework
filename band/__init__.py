@@ -15,3 +15,5 @@ attach_scheduler(app)
 
 if settings.name != DIRECTOR_SERVICE:
     importlib.import_module('band.lib.promote', 'band')
+
+__VERSION__ = '0.1.0'
