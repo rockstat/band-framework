@@ -117,6 +117,7 @@ class RedisPubSubRPC(AsyncClient):
             except Exception:
                 logger.exception('redis_rpc_writer: unknown')
             finally:
+                logger.info('redis_rpc_writer: finally / closing pool')
                 pool.close()
                 await pool.wait_closed()
                 await asyncio.sleep(1)
