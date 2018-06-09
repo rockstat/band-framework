@@ -9,7 +9,6 @@ from .lib.http import resp
 from .log import logger
 from .lib.structs import MethodRegistration
 
-jsonrpcserver.config.debug = False
 jsonrpcserver.config.log_requests = False
 jsonrpcserver.config.log_responses = False
 
@@ -30,18 +29,15 @@ class Tasks():
 
 class AsyncRolesMethods(AsyncMethods):
     def add_method(self, handler, register={}, *args, **kwargs):
-        if not hasattr(self, '_roles'):
-            self._roles = Prodict()
+        if not hasattr(self, '_roles'): self._roles = Prodict()
         method_name = kwargs.pop('name', handler.__name__)
         role = kwargs.pop('role', None)
-
-        self._roles[method_name] = MethodRegistration(method=method_name, role=role, options=register)
+        self._roles[method_name] = MethodRegistration(
+            method=method_name, role=role, options=register)
         self[method_name] = handler
 
-
     def add(self, *args, **kwargs):
-        if not hasattr(self, '_roles'):
-            self._roles = Prodict()
+        if not hasattr(self, '_roles'): self._roles = Prodict()
 
         def inner(handler):
             self.add_method(handler, *args, **kwargs)
@@ -49,17 +45,13 @@ class AsyncRolesMethods(AsyncMethods):
 
         return inner
 
-    # @property
-    # def tups(self):
-        # return list(m for m in self._roles.values())
-
     @property
     def dicts(self):
-        return list(m for m in self._roles.values() if not m.method.startswith('__'))
+        return list(
+            m for m in self._roles.values() if not m.method.startswith('__'))
 
 
 class Dome:
-
     NONE = 'none'
     TASK = 'task'
     LISTENER = 'listener'
@@ -80,7 +72,8 @@ class Dome:
         if path is None:
             path = '/{}'.format(name)
 
-        self._methods.add_method(handler, name=name, role=role, register=register)
+        self._methods.add_method(
+            handler, name=name, role=role, register=register)
 
         async def get_handler(request):
             query = dict(request.query)
