@@ -46,6 +46,12 @@ class RedisPubSubRPC(AsyncClient):
         self.queue = asyncio.Queue()
         self.timeout = 5
         self.id_gen = itertools.count(1)
+    
+    def log_request(self, request, extra=None, fmt=None):
+        pass
+
+    def log_response(self, response, extra=None, fmt=None):
+        pass
 
     async def dispatch(self, msg):
         """

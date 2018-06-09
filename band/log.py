@@ -3,7 +3,10 @@ import sys
 import coloredlogs
 
 LOGGER_FORMAT = '%(asctime)s %(levelname)s %(message)s'
-JSON_FORMAT='{ "loggerName":"%(name)s", "asciTime":"%(asctime)s", "fileName":"%(filename)s", "logRecordCreationTime":"%(created)f", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s"}'
+
+# "logRecordCreationTime":"%(created)f", 
+
+JSON_FORMAT='{ "loggerName":"%(name)s", "asciTime":"%(asctime)s", "fileName":"%(filename)s", "functionName":"%(funcName)s", "levelNo":"%(levelno)s", "lineNo":"%(lineno)d", "time":"%(msecs)d", "levelName":"%(levelname)s", "message":"%(message)s"}'
 
 
 logger = logging.getLogger(__name__)

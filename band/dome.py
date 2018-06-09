@@ -1,17 +1,17 @@
-import jsonrpcserver
 import ujson
-from collections import deque
+import jsonrpcserver
 from jsonrpcserver.aio import AsyncMethods
 from aiohttp.web import RouteTableDef, RouteDef
+from collections import deque
 from prodict import Prodict
 from pprint import pprint
 from .lib.http import resp
 from .log import logger
 from .lib.structs import MethodRegistration
 
-# jsonrpcserver.config.debug = False
-# jsonrpcserver.config.log_requests = False
-# jsonrpcserver.config.log_responses = False
+jsonrpcserver.config.debug = False
+jsonrpcserver.config.log_requests = False
+jsonrpcserver.config.log_responses = False
 
 
 class Tasks():
