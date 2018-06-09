@@ -8,11 +8,10 @@ START_AT = round(time() * 1000)
 
 @dome.tasks.add
 async def promote():
-    logger.info('announcing service')
+    logger.info('starting announcing service')
     while True:
         # Initial delay
         await sleep(1)
-        logger.info('promoting service')
         try:
             await rpc.notify(
                 DIRECTOR_SERVICE, NOTIFY_ALIVE, name=settings.name)
