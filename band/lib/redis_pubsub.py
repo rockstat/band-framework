@@ -2,6 +2,7 @@ from jsonrpcclient.async_client import AsyncClient
 from jsonrpcclient.request import Request, Notification
 from async_timeout import timeout
 from collections import namedtuple
+from prodict import Prodict
 import asyncio
 import ujson
 import itertools
@@ -9,12 +10,7 @@ import aioredis
 from aioredis.pubsub import Receiver
 from aioredis.abc import AbcChannel
 
-from .. import dome, logger, BROADCAST
-
-# Positions in rpc method name
-DEST_POS = 0
-METHOD_POS = 1
-SENDER_POS = 2
+from .. import dome, logger, BROADCAST, ENRICH
 
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
@@ -39,14 +35,16 @@ class RedisPubSubRPC(AsyncClient):
         self._loop = app.loop
         self.pending = {}
         self.redis_dsn = redis_dsn
-        self.redis_params = kwargs.get("redis_params", {})
-        self.channels = [self.name]
-        if 'listen_all' in self.redis_params and self.redis_params['listen_all'] == True:
-            self.channels.append(BROADCAST)
+        self.redis_params = Prodict.from_dict(kwargs.get("redis_params", {}))
+        self.channels = set([self.name])
+        if self.redis_params.listen_all == True:
+            self.channels.add(BROADCAST)
+        if self.redis_params.listen_enrich == True:
+            self.channels.add(ENRICH)
         self.queue = asyncio.Queue()
-        self.timeout = 5
+        self.rpc_timeout = 2
         self.id_gen = itertools.count(1)
-    
+
     def log_request(self, request, extra=None, fmt=None):
         pass
 
@@ -73,16 +71,22 @@ class RedisPubSubRPC(AsyncClient):
         # call to served methods
         elif 'params' in msg:
             # check address structure
-            if msg['to'] == self.name or msg['to'] == BROADCAST:
+            if msg['to'] in self.channels:
                 response = await dome.methods.dispatch(msg)
                 if not response.is_notification:
-                    await self.put(msg['from'], ujson.dumps(response))
-                    
+                    resp = {**response, 'from': self.name, 'to':msg['from']}
+                    await self.put(msg['from'], ujson.dumps(resp))
+
+    async def reader(self):
+        for chan in self.channels:
+            asyncio.ensure_future(self.chan_reader(chan))
+
     async def chan_reader(self, chan):
         logger.info('starting reader for channel %s', chan)
         while True:
             try:
-                sub = await aioredis.create_redis(self.redis_dsn, loop=self._loop)
+                sub = await aioredis.create_redis(
+                    self.redis_dsn, loop=self._loop)
                 channel, = await sub.subscribe(chan)
                 while True:
                     msg = await channel.get(encoding='utf-8')
@@ -100,22 +104,18 @@ class RedisPubSubRPC(AsyncClient):
                 await sub.wait_closed()
                 await asyncio.sleep(1)
 
-    async def reader(self):
-        for chan in self.channels:
-            asyncio.ensure_future(self.chan_reader(chan))
-
     async def writer(self):
         while True:
             logger.info('redis_rpc_writer: root loop. creating pool')
             try:
                 pool = await aioredis.create_pool(
-                                    self.redis_dsn, loop=self._loop)
+                    self.redis_dsn, loop=self._loop)
                 logger.info('redis_rpc_writer: entering loop')
                 while True:
                     name, msg = await self.queue.get()
                     self.queue.task_done()
                     async with pool.get() as conn:
-                        await conn.execute('publish', name, msg)                            
+                        await conn.execute('publish', name, msg)
 
             except asyncio.CancelledError:
                 logger.info('redis_rpc_writer: cancelled / break')
@@ -162,7 +162,7 @@ class RedisPubSubRPC(AsyncClient):
         try:
             req = self.pending[req_id] = asyncio.Future()
             # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
-            async with timeout(2) as cm:
+            async with timeout(self.rpc_timeout) as cm:
                 await req
         except asyncio.TimeoutError:
             logger.error('rpc.send_message TimeoutError. to: %s ; id %s', to,
@@ -178,8 +178,10 @@ class RedisPubSubRPC(AsyncClient):
 
 # Attaching to aiohttp
 async def redis_rpc_startup(app):
-    app['rrpc_w'] = asyncio.ensure_future(app['rpc'].writer())# app.loop.create_task(app['rpc'].writer())
-    app['rrpc_r'] = asyncio.ensure_future(app['rpc'].reader())# app.loop.create_task(app['rpc'].reader())
+    app['rrpc_w'] = asyncio.ensure_future(
+        app['rpc'].writer())  # app.loop.create_task(app['rpc'].writer())
+    app['rrpc_r'] = asyncio.ensure_future(
+        app['rpc'].reader())  # app.loop.create_task(app['rpc'].reader())
 
 
 async def redis_rpc_cleanup(app):

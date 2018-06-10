@@ -18,7 +18,7 @@ async def promote():
         except Exception:
             logger.exception('announce error')
         # Notify every
-        await sleep(30)
+        await sleep(5)
 
 
 @dome.expose()
@@ -29,9 +29,10 @@ async def __status(**params):
     ms_diff = round(time() * 1000 - START_AT)
     up_time = str(timedelta(milliseconds=ms_diff))
     return {
+        'name': settings.name,
         'app_started': START_AT,
         'app_uptime': ms_diff,
         'app_uptime_h': up_time,
-        # 'methods': dome.methods.tups,
+        'status': 'running',
         'register': dome.methods.dicts
     }
