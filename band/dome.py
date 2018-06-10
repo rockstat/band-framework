@@ -79,7 +79,7 @@ class Dome:
             query = dict(request.query)
             query.update(request.match_info)
             result = await handler(**query)
-            return resp(result)
+            return resp(result, request=request)
 
         async def post_handler(request):
             query = dict(request.query)
@@ -93,7 +93,7 @@ class Dome:
             # url params
             query.update(request.match_info)
             result = await handler(**query)
-            return resp(result)
+            return resp(result, request=request)
 
         self._routes.append(RouteDef('GET', path, get_handler, routekwargs))
         self._routes.append(RouteDef('POST', path, post_handler, routekwargs))
