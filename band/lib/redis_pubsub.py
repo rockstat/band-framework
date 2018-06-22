@@ -75,7 +75,7 @@ class RedisPubSubRPC(AsyncClient):
                 response = await dome.methods.dispatch(msg)
                 if not response.is_notification:
                     resp = {**response, 'from': self.name, 'to':msg['from']}
-                    await self.put(msg['from'], ujson.dumps(resp))
+                    await self.put(msg['from'], ujson.dumps(resp, ensure_ascii=False))
 
     async def reader(self):
         for chan in self.channels:

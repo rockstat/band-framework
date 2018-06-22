@@ -20,7 +20,7 @@ More at project documentation
     install_requires=[
         'pyyaml', 'inflection', 'jinja2', 'coloredlogs',
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
-        'aiojobs', 'aiodocker', 'aiofiles',
+        'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
         'jsonrpcserver', 'jsonrpcclient', 'requests',
         'python-dotenv',
         'prodict', 'ujson'
