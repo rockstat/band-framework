@@ -3,8 +3,7 @@ import jsonrpcserver
 from jsonrpcserver.aio import AsyncMethods
 from aiohttp.web import RouteTableDef, RouteDef
 from collections import deque
-from prodict import Prodict
-from pprint import pprint
+# from prodict import Prodict
 from .lib.http import resp
 from .log import logger
 from .lib.structs import MethodRegistration
@@ -28,16 +27,19 @@ class Tasks():
 
 
 class AsyncRolesMethods(AsyncMethods):
-    def add_method(self, handler, register={}, *args, **kwargs):
-        if not hasattr(self, '_roles'): self._roles = Prodict()
+    def add_method(self, handler, reg_options={}, *args, **kwargs):
+        if not hasattr(self, '_roles'): self._roles = dict()
         method_name = kwargs.pop('name', handler.__name__)
         role = kwargs.pop('role', None)
-        self._roles[method_name] = MethodRegistration(
-            method=method_name, role=role, options=register)
+
+        method_cfg = dict(
+            MethodRegistration(method_name, role,
+                               reg_options.copy())._asdict())
+        self._roles[method_name] = method_cfg
         self[method_name] = handler
 
     def add(self, *args, **kwargs):
-        if not hasattr(self, '_roles'): self._roles = Prodict()
+        if not hasattr(self, '_roles'): self._roles = dict()
 
         def inner(handler):
             self.add_method(handler, *args, **kwargs)
@@ -47,8 +49,8 @@ class AsyncRolesMethods(AsyncMethods):
 
     @property
     def dicts(self):
-        return list(
-            m for m in self._roles.values() if not m.method.startswith('__'))
+        return list(method_cfg for method_cfg in self._roles.values()
+                    if not method_cfg['method'].startswith('__'))
 
 
 class Dome:
@@ -63,17 +65,30 @@ class Dome:
         self._router = RouteTableDef()
         self._routes = []
         self._methods = AsyncRolesMethods()
-        self._state = Prodict()
 
-    def expose_method(self, handler, path=None, register={}, **kwargs):
+    def expose_method(self,
+                      handler,
+                      path=None,
+                      alias=None,
+                      keys=[],
+                      props={},
+                      register={},
+                      **kwargs):
         role = kwargs.pop('role', self.NONE)
         routekwargs = kwargs.pop('route', {})
         name = kwargs.get('name', handler.__name__)
         if path is None:
             path = '/{}'.format(name)
-
+        # Handling frontier registration
+        reg_options = dict(**register)
+        reg_options['keys'] = keys
+        reg_options['props'] = props
+        if alias:
+            reg_options['alias'] = alias
+        if role == Dome.ENRICHER and len(keys) == 0:
+            raise ValueError
         self._methods.add_method(
-            handler, name=name, role=role, register=register)
+            handler, name=name, role=role, reg_options=reg_options)
 
         async def get_handler(request):
             query = dict(request.query)
@@ -110,10 +125,6 @@ class Dome:
 
     def shutdown(self, *args, **kwargs):
         self._tasks.shutdown(*args, **kwargs)
-
-    @property
-    def state(self):
-        return self._state
 
     @property
     def methods(self):

@@ -1,5 +1,5 @@
 from collections import deque, defaultdict, UserDict, namedtuple
-from prodict import Prodict
+from typing import Dict, NamedTuple
 
 
 class DotDict(dict):
@@ -11,8 +11,7 @@ class DotDict(dict):
         self[attr] = value
 
 
-class MethodRegistration(Prodict):
-    service: str
+class MethodRegistration(NamedTuple):
     method: str
     role: str
-    options: Prodict
+    options: Dict
