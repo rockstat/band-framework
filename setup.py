@@ -21,12 +21,9 @@ More at project documentation
         'pyyaml', 'inflection', 'jinja2', 'coloredlogs',
         'asyncio', 'uvloop', 'aiohttp', 'aioredis',
         'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
-        'jsonrpcserver', 'jsonrpcclient', 'requests',
+        'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests',
         'python-dotenv',
         'prodict', 'ujson'
-    ],
-    dependency_links=[
-        'git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient'
     ],
     # extras_require={
     #     'dev': ['check-manifest'],

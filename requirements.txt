@@ -11,7 +11,7 @@ aiohttp
 aioredis
 async_lru
 jsonrpcserver 
-git+https://github.com/bcb/jsonrpcclient.git@master#egg=jsonrpcclient
+jsonrpcclient
 aiofiles
 aiojobs
 aiodocker
