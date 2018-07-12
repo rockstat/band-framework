@@ -27,11 +27,13 @@ class Tasks():
 
 
 class AsyncRolesMethods(AsyncMethods):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._roles = dict()
+
     def add_method(self, handler, reg_options={}, *args, **kwargs):
-        if not hasattr(self, '_roles'): self._roles = dict()
         method_name = kwargs.pop('name', handler.__name__)
         role = kwargs.pop('role', None)
-
         method_cfg = dict(
             MethodRegistration(method_name, role,
                                reg_options.copy())._asdict())
@@ -39,8 +41,6 @@ class AsyncRolesMethods(AsyncMethods):
         self[method_name] = handler
 
     def add(self, *args, **kwargs):
-        if not hasattr(self, '_roles'): self._roles = dict()
-
         def inner(handler):
             self.add_method(handler, *args, **kwargs)
             return handler
