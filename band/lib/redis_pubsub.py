@@ -7,10 +7,8 @@ import asyncio
 import ujson
 import itertools
 import aioredis
-from aioredis.pubsub import Receiver
-from aioredis.abc import AbcChannel
 
-from .. import dome, logger, BROADCAST, ENRICH
+from .. import dome, logger, redis_factory, BROADCAST, ENRICH
 
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
@@ -28,13 +26,12 @@ class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
 
 
 class RedisPubSubRPC(AsyncClient):
-    def __init__(self, name, app, redis_dsn, endpoint='none', **kwargs):
+    def __init__(self, name, app, endpoint='none', **kwargs):
         super(RedisPubSubRPC, self).__init__(endpoint)
         self.name = name
         self._app = app
         self._loop = app.loop
         self.pending = {}
-        self.redis_dsn = redis_dsn
         self.redis_params = Prodict.from_dict(kwargs.get("redis_params", {}))
         self.channels = set([self.name])
         if self.redis_params.listen_all == True:
@@ -85,9 +82,8 @@ class RedisPubSubRPC(AsyncClient):
         logger.info('starting reader for channel %s', chan)
         while True:
             try:
-                sub = await aioredis.create_redis(
-                    self.redis_dsn, loop=self._loop)
-                channel, = await sub.subscribe(chan)
+                client = await redis_factory.create_client()
+                channel, = await client.subscribe(chan)
                 while True:
                     msg = await channel.get(encoding='utf-8')
                     if msg is None:
@@ -100,16 +96,13 @@ class RedisPubSubRPC(AsyncClient):
                 break
                 logger.info('redis_rpc_reader: loop cancelled / call break')
             finally:
-                sub.close()
-                await sub.wait_closed()
-                await asyncio.sleep(1)
+                await redis_factory.close_client(client)
 
     async def writer(self):
         while True:
             logger.info('redis_rpc_writer: root loop. creating pool')
             try:
-                pool = await aioredis.create_pool(
-                    self.redis_dsn, loop=self._loop)
+                pool = await redis_factory.create_pool()
                 logger.info('redis_rpc_writer: entering loop')
                 while True:
                     name, msg = await self.queue.get()
@@ -124,9 +117,7 @@ class RedisPubSubRPC(AsyncClient):
                 logger.exception('redis_rpc_writer: unknown')
             finally:
                 logger.info('redis_rpc_writer: finally / closing pool')
-                pool.close()
-                await pool.wait_closed()
-                await asyncio.sleep(1)
+                await redis_factory.close_pool(pool)
 
     async def get(self):
         item = await self.queue.get()

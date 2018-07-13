@@ -1,7 +1,4 @@
 
-ENV_DEV = 'development'
-ENV_PROD = 'production'
-
 # Services
 DIRECTOR_SERVICE = 'director'
 FRONTIER_SERVICE = 'frontier'
