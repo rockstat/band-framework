@@ -6,7 +6,7 @@ from .config.env import *
 from .log import *
 from .config.configfile import settings
 from .lib.structs import *
-from .lib.http import resp
+from .lib.http import json_response
 from .lib.redis import RedisFactory
 redis_factory = RedisFactory(**settings)
 

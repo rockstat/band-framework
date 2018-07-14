@@ -14,8 +14,9 @@ class RedisFactory:
         return await aioredis.create_pool(self.redis_dsn)
 
     async def close_client(self, client):
-        client.close()
-        await client.wait_closed()
+        if not client.closed:
+            client.close()
+            await client.wait_closed()
         await asyncio.sleep(0.01)
 
     async def close_pool(self, pool):

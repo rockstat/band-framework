@@ -91,7 +91,7 @@ class RedisPubSubRPC(AsyncClient):
                     msg = ujson.loads(msg)
                     await self._app['scheduler'].spawn(self.dispatch(msg))
             except Exception:
-                logger.exception('reader finished')
+                logger.exception('reader exception')
             except asyncio.CancelledError:
                 break
                 logger.info('redis_rpc_reader: loop cancelled / call break')
