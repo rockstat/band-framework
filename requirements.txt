@@ -6,7 +6,6 @@ pyyaml
 ujson
 uvloop
 asyncio
-arrow
 aiohttp
 aioredis
 async_lru
@@ -18,3 +17,4 @@ aiodocker
 prodict
 requests
 coloredlogs
+arrow
