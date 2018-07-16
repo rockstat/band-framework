@@ -32,7 +32,6 @@ async def __status(**params):
         'name': settings.name,
         'app_started': START_AT,
         'app_uptime': ms_diff,
-        'app_uptime_h': up_time,
         'app_state': 'running',
         'register': dome.methods.dicts
     }
