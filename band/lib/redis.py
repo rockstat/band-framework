@@ -1,14 +1,16 @@
 from band import settings
 import asyncio
 import aioredis
-from weakref import WeakKeyDictionary
+from .. import logger
+# from weakref import WeakKeyDictionary
 
 class RedisFactory:
     def __init__(self, redis_dsn, **kwargs):
         self.redis_dsn = redis_dsn
-        self.wmap = WeakKeyDictionary()
+        # self.wmap = WeakKeyDictionary()
 
     async def create_client(self):
+        logger.debug('creating redis client using to %s', self.redis_dsn)
         return await aioredis.create_redis(self.redis_dsn)
 
     # async def create_subsribed_client(self, chan):
@@ -18,6 +20,7 @@ class RedisFactory:
     #     return client, channel
 
     async def create_pool(self):
+        logger.debug('creating redis pool using to %s', self.redis_dsn)
         return await aioredis.create_pool(self.redis_dsn)
 
     async def close_client(self, client):
