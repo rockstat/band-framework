@@ -3,7 +3,7 @@ name: {{NAME}}
 env: {{ENV}}
 
 listen: "{{HOST|default('0.0.0.0')}}:{{PORT}}"
-redis_dsn: "redis://{{REDIS_HOST}}:{{REDIS_PORT|default(6379)}}"
+redis_dsn: "{{REDIS_DSN}}"
 images_path: {{IMAGES_PATH}}
 images:
   single:
@@ -20,6 +20,7 @@ container_params:
   memory: 367001600 # limit 350mb
   bind_ip: "{{BIND_HOST_IP}}"
 container_env:
-  HOST: '0.0.0.0'
-  REDIS_HOST: "{{REDIS_HOST_ISOLATED}}"
-  REDIS_DSN: "redis://{{REDIS_HOST_ISOLATED}}:{{REDIS_PORT|default(6379)}}"
+  REDIS_DSN: "{{REDIS_DSN}}"
+  CH_DSN: "{{CH_DSN}}"
+  STATSD_HOST: "{{STATSD_HOST}}"
+  JSON_LOGS: "{{JSON_LOGS}}"

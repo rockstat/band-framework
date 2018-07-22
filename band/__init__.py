@@ -1,3 +1,5 @@
+__VERSION__ = '0.1.0'
+
 import importlib
 import os
 
@@ -15,10 +17,12 @@ from .server import app, start_server, add_routes
 from .lib.jobs import attach_scheduler, run_task
 from .lib.redis_pubsub import attach_redis_rpc
 
-rpc = attach_redis_rpc(app, **settings)
 attach_scheduler(app)
+rpc = attach_redis_rpc(app, **settings)
 
 # if settings.name != DIRECTOR_SERVICE:
 importlib.import_module('band.lib.promote', 'band')
 
-__VERSION__ = '0.1.0'
+# libs
+
+from asimplech import ClickHouse

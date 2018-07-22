@@ -71,12 +71,13 @@ class RedisPubSubRPC(AsyncClient):
             if msg['to'] in self.channels:
                 response = await dome.methods.dispatch(msg)
                 if not response.is_notification:
-                    resp = {**response, 'from': self.name, 'to':msg['from']}
-                    await self.put(msg['from'], ujson.dumps(resp, ensure_ascii=False))
+                    resp = {**response, 'from': self.name, 'to': msg['from']}
+                    await self.put(msg['from'],
+                                   ujson.dumps(resp, ensure_ascii=False))
 
     async def reader(self):
         for chan in self.channels:
-            asyncio.ensure_future(self.chan_reader(chan))
+            await self._app['scheduler'].spawn(self.chan_reader(chan))
 
     async def chan_reader(self, chan):
         logger.info('starting reader for channel %s', chan)
@@ -90,12 +91,13 @@ class RedisPubSubRPC(AsyncClient):
                         break
                     msg = ujson.loads(msg)
                     await self._app['scheduler'].spawn(self.dispatch(msg))
+            except asyncio.CancelledError:
+                logger.info('redis_rpc_reader: loop cancelled / call break')
+                break
             except Exception:
                 logger.exception('reader exception')
-            except asyncio.CancelledError:
-                break
-                logger.info('redis_rpc_reader: loop cancelled / call break')
             finally:
+                await client.unsubscribe(chan)
                 await redis_factory.close_client(client)
 
     async def writer(self):
@@ -169,17 +171,20 @@ class RedisPubSubRPC(AsyncClient):
 
 # Attaching to aiohttp
 async def redis_rpc_startup(app):
-    app['rrpc_w'] = asyncio.ensure_future(
-        app['rpc'].writer())  # app.loop.create_task(app['rpc'].writer())
-    app['rrpc_r'] = asyncio.ensure_future(
-        app['rpc'].reader())  # app.loop.create_task(app['rpc'].reader())
+    await app['scheduler'].spawn(app['rpc'].writer())
+    await app['scheduler'].spawn(app['rpc'].reader())
+    # app['rrpc_w'] = asyncio.ensure_future(
+    #     )  # app.loop.create_task(app['rpc'].writer())
+    # app['rrpc_r'] = asyncio.ensure_future(
+    #     )  # app.loop.create_task(app['rpc'].reader())
 
 
 async def redis_rpc_cleanup(app):
-    app['rrpc_r'].cancel()
-    await app['rrpc_r']
-    app['rrpc_w'].cancel()
-    await app['rrpc_w']
+    # app['rrpc_r'].cancel()
+    # await asyncio.wait_for(app['rrpc_r'], timeout=5)
+    # app['rrpc_w'].cancel()
+    # await asyncio.wait_for(app['rrpc_w'], timeout=5)
+    pass
 
 
 def attach_redis_rpc(app, name, **kwargs):

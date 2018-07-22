@@ -23,7 +23,7 @@ More at project documentation
         'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
         'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests',
         'python-dotenv',
-        'prodict', 'ujson'
+        'prodict', 'ujson', 'asimplech'
     ],
     # extras_require={
     #     'dev': ['check-manifest'],
