@@ -1,8 +1,21 @@
 from setuptools import setup, find_packages
+import pathlib
+import re
 
-setup(
+here = pathlib.Path(__file__).parent
+
+txt = (here / 'band' / '__init__.py').read_text('utf-8')
+try:
+    version = re.findall(r"^__VERSION__ = '([^']+)'\r?$",
+                         txt, re.M)[0]
+
+except IndexError:
+    raise RuntimeError('Unable to determine version.')
+
+
+setup (
     name='band',
-    version='0.1',
+    version=version,
     author='Dmitry Rodin',
     author_email='madiedinro@gmail.com',
     license='MIT',
