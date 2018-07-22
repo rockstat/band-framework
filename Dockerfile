@@ -9,16 +9,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         nano \
 	&& rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/src/band
-
 ENV HOST=0.0.0.0
 ENV PORT=8080
 #cachebust
 ARG RELEASE=master
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /usr/src/band
+ADD requirements.txt .
+RUN echo "Release: ${RELEASE}" && pip install --no-cache-dir -r requirements.txt
 
 EXPOSE ${PORT}
-COPY . .
+ADD . .
 RUN python setup.py develop
