@@ -1,4 +1,4 @@
-from aiohttp.web import json_response as _json_response, middleware, HTTPException
+from aiohttp.web import json_response as _json_response, middleware, HTTPException, Response
 import time
 from band import logger
 
@@ -7,7 +7,7 @@ def json_response(result, status=200, request=None):
 
 
 def say_cors_yes(request=None):
-    return web.Response(headers=cors_headers(request=request))
+    return Response(headers=cors_headers(request=request))
 
 
 def cors_headers(request):
