@@ -9,7 +9,9 @@ JSON_FORMAT = '{ "loggerName":"%(name)s", "asciTime":"%(asctime)s", "levelNo":"%
 
 logger = logging.getLogger(__name__)
 
-if environ.get('JSON_LOGS', False):
+json_logs = environ.get('JSON_LOGS', '0').lower() in ("yes", "true", "t", "1")
+
+if json_logs:
     logger.setLevel(logging.DEBUG)
     log_formatter = logging.Formatter(JSON_FORMAT)
     log_handler = logging.StreamHandler()
