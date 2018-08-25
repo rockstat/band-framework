@@ -36,7 +36,7 @@ More at project documentation
         'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
         'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests',
         'python-dotenv',
-        'prodict', 'ujson', 'asimplech>=0.1.5'
+        'prodict', 'ujson', 'asimplech>=0.1.7'
     ],
     # extras_require={
     #     'dev': ['check-manifest'],
