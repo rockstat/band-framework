@@ -20,7 +20,7 @@ container_params:
   bind_ip: "{{BIND_HOST_IP}}"
 container_env:
   REDIS_DSN: "{{REDIS_DSN}}"
-  CH_DSN: "{{CH_DSN}}"
+  CHP_DSN: "{{CHP_DSN}}"
   CHS_DSN: "{{CHS_DSN}}"
   STATSD_HOST: "{{STATSD_HOST}}"
   JSON_LOGS: "{{JSON_LOGS}}"

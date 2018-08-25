@@ -1,5 +1,3 @@
-__VERSION__ = '0.2.0'
-
 import importlib
 import os
 
@@ -26,6 +24,3 @@ importlib.import_module('band.lib.promote', 'band')
 # libs
 
 from asimplech import ClickHouse
-
-def get_version():
-    return __VERSION__

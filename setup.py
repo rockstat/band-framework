@@ -1,21 +1,10 @@
+__VERSION__ = '0.2.0'
+
 from setuptools import setup, find_packages
-import pathlib
-import re
 
-here = pathlib.Path(__file__).parent
-
-txt = (here / 'band' / '__init__.py').read_text('utf-8')
-try:
-    version = re.findall(r"^__VERSION__ = '([^']+)'\r?$",
-                         txt, re.M)[0]
-
-except IndexError:
-    raise RuntimeError('Unable to determine version.')
-
-
-setup (
+setup(
     name='band',
-    version=version,
+    version=__VERSION__,
     author='Dmitry Rodin',
     author_email='madiedinro@gmail.com',
     license='MIT',
@@ -28,14 +17,12 @@ Includes microserivice framework for easy develop simple services and easy expos
 More at project documentation
     """,
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    url='https://github.com/rockstat',
+    url='https://github.com/rockstat/band',
     include_package_data=True,
     install_requires=[
-        'pyyaml', 'inflection', 'jinja2', 'coloredlogs',
-        'asyncio', 'uvloop', 'aiohttp', 'aioredis',
-        'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
-        'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests',
-        'python-dotenv',
+        'pyyaml', 'inflection', 'jinja2', 'coloredlogs', 'asyncio', 'uvloop',
+        'aiohttp', 'aioredis', 'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
+        'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests', 'python-dotenv',
         'prodict', 'ujson', 'asimplech>=0.1.7'
     ],
     # extras_require={
@@ -50,7 +37,6 @@ More at project documentation
         'Programming Language :: Python :: 3.6',
     ],
     project_urls={  # Optional
-        'Homepage': 'https://rockstat.ru',
-        'Docs': 'https://rockstat.ru/docs'
-    }
-)
+        'Homepage': 'https://rstat.org',
+        'Docs': 'https://rstat.org/docs'
+    })
