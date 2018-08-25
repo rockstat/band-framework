@@ -2,8 +2,7 @@
 name: {{NAME}}
 env: {{ENV}}
 
-listen: "{{HOST|default('0.0.0.0')}}:{{PORT}}"
-redis_dsn: "{{REDIS_DSN}}"
+wredis_dsn: "{{REDIS_DSN}}"
 images_path: {{IMAGES_PATH}}
 images:
   single:
@@ -22,5 +21,6 @@ container_params:
 container_env:
   REDIS_DSN: "{{REDIS_DSN}}"
   CH_DSN: "{{CH_DSN}}"
+  CHS_DSN: "{{CHS_DSN}}"
   STATSD_HOST: "{{STATSD_HOST}}"
   JSON_LOGS: "{{JSON_LOGS}}"
