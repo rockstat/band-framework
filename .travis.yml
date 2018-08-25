@@ -3,8 +3,8 @@ dist: trusty
 
 env:
   global:
-    - PROJECT_NAME=band-base-py
-    - IMAGE_NAME=$DOCKER_USERNAME/$PROJECT_NAME
+  - PROJECT_NAME=band-base-py
+  - IMAGE_NAME=$DOCKER_USERNAME/$PROJECT_NAME
 
 services:
 - docker
