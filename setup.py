@@ -25,10 +25,6 @@ More at project documentation
         'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests', 'python-dotenv',
         'prodict', 'ujson', 'asimplech>=0.1.7'
     ],
-    # extras_require={
-    #     'dev': ['check-manifest'],
-    #     'test': ['coverage'],
-    # },
     zip_safe=False,
     classifiers=[
         'Development Status :: 3 - Alpha',

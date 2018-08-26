@@ -11,13 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV HOST=0.0.0.0
 ENV PORT=8080
-#cachebust
-ARG RELEASE=master
-
-WORKDIR /usr/src/band
-ADD requirements.txt .
-RUN echo "Release: ${RELEASE}" && pip install --no-cache-dir -r requirements.txt
-
 EXPOSE ${PORT}
+WORKDIR /usr/src/band
 ADD . .
 RUN python setup.py develop
+RUN pip freeze
