@@ -10,7 +10,7 @@ from .lib.http import json_response
 from .lib.redis import RedisFactory
 redis_factory = RedisFactory(**settings)
 
-from .dome import dome
+from .dome import *
 from .server import app, start_server, add_routes
 from .lib.jobs import attach_scheduler, run_task
 from .lib.redis_pubsub import attach_redis_rpc

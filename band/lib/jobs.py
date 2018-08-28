@@ -9,14 +9,6 @@ async def dome_startup_tasks(app):
     """
     Starting funcs marked as tasks
     """
-    for task in dome.tasks._initial:
-        try:
-            if inspect.iscoroutinefunction(task) == True:
-                task = task()
-            await app['scheduler'].spawn(task)
-        except Exception:
-            logger.exception('exc')
-
     for task in dome.tasks._startup:
         try:
             if inspect.iscoroutinefunction(task) == True:

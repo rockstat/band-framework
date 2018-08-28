@@ -2,8 +2,6 @@ import ujson
 import jsonrpcserver
 from jsonrpcserver.aio import AsyncMethods
 from aiohttp.web import RouteTableDef, RouteDef
-from collections import deque
-# from prodict import Prodict
 from .lib.http import json_response, json_middleware
 from .log import logger
 from .lib.structs import MethodRegistration
@@ -11,16 +9,15 @@ from .lib.structs import MethodRegistration
 jsonrpcserver.config.log_requests = False
 jsonrpcserver.config.log_responses = False
 
+LISTENER = 'listener'
+HANDLER = 'handler'
+ENRICHER = 'enricher'
+NONE = 'none'
 
 class Tasks():
     def __init__(self):
-        self._initial = deque()
-        self._startup = deque()
-        self._shutdown = deque()
-
-    def initial(self, item):
-        self._initial.append(item)
-        return self
+        self._startup = list()
+        self._shutdown = list()
 
     def add(self, item):
         self._startup.append(item)
@@ -45,11 +42,10 @@ class AsyncRolesMethods(AsyncMethods):
         self[method_name] = handler
 
     def add(self, *args, **kwargs):
-        def inner(handler):
+        def wrapper(handler):
             self.add_method(handler, *args, **kwargs)
             return handler
-
-        return inner
+        return wrapper
 
     @property
     def dicts(self):
@@ -61,9 +57,9 @@ class AsyncRolesMethods(AsyncMethods):
 class Dome:
     NONE = 'none'
     TASK = 'task'
-    LISTENER = 'listener'
-    HANDLER = 'handler'
-    ENRICHER = 'enricher'
+    LISTENER = LISTENER
+    HANDLER = HANDLER
+    ENRICHER = ENRICHER
 
     def __init__(self):
         self._tasks = Tasks()
@@ -75,23 +71,25 @@ class Dome:
                       handler,
                       path=None,
                       alias=None,
-                      keys=[],
-                      props={},
-                      register={},
+                      keys=None,
+                      props=None,
+                      register=None,
+                      role=NONE,
                       **kwargs):
-        role = kwargs.pop('role', self.NONE)
         routekwargs = kwargs.pop('route', {})
-        name = kwargs.get('name', handler.__name__)
+        name = kwargs.get('name', None)
+        if not name:
+            name = handler.__name__
         if path is None:
-            path = '/{}'.format(name)
+            path = f'/{name}'
         # Handling frontier registration
-        reg_options = dict(**register)
-        reg_options['keys'] = keys
-        reg_options['props'] = props
-        if alias:
+        reg_options = dict(**(register or {}))
+        reg_options['keys'] = keys or []
+        reg_options['props'] = props or {}
+        if alias and alias != None:
             reg_options['alias'] = alias
         if role == Dome.ENRICHER and len(keys) == 0:
-            raise ValueError
+            raise ValueError('Keys property must be present')
         self._methods.add_method(
             handler, name=name, role=role, reg_options=reg_options)
 
@@ -143,6 +141,77 @@ class Dome:
         return self._routes
 
 
-dome = Dome()
+class Expose:
 
-__all__ = ['Dome', 'dome']
+    def __init__(self, dome):
+        self.dome = dome
+
+    def handler(self, name=None, path=None, alias=None):
+        """
+        Expose function and promote function as request handler to front service.
+        name: 
+        path="/hello/:name" For services exposed by HTTP you can configure path with with params
+        alias=other_service If needed possible to promote service by different name. Affected only service name in front service
+        """
+        print(name, path, alias)
+        def wrapper(handler):
+            print(handler)
+            self.dome.expose_method(handler, name=name, path=path, role=HANDLER)
+            return handler
+        return wrapper
+
+    def enricher(self, props: list, keys: list):
+        """
+        Expose function and promote function as request enricher to front service
+        props: list contains requests props in dot notation like ["sess.type"]
+        keys: list of requested dispatching keys
+        """
+        def wrapper(handler):
+            self.dome.expose_method(handler, role=ENRICHER)
+            return handler
+        return wrapper
+
+    def listener(self):
+        """
+        Expose function and promote functions as request listener to front service
+        Will receive all requests at final stage
+        """
+        def wrapper(handler):
+            self.dome.expose_method(handler, role=LISTENER)
+            return handler
+        return wrapper
+
+    def __call__(self, *args, **kwargs):
+        def wrapper(handler):
+            self.dome.expose_method(handler, role=NONE, *args, **kwargs)
+            return handler
+        return wrapper
+
+
+def worker(*args, **kwargs):
+    """
+    Register function as worker.
+    Will be executed on application startup
+    """
+    def wrapper(handler):
+        dome._tasks.add(handler)
+        return handler
+    return wrapper
+
+
+def cleaner(*args, **kwargs):
+    """
+    Register function as cleaner.
+    Will be executed on application shotdown
+    """
+    def wrapper(handler):
+        dome._tasks.shutdown(handler)
+        return handler
+    return wrapper
+
+
+dome = Dome()
+expose = Expose(dome)
+
+
+__all__ = ['Dome', 'dome', 'expose', 'worker', 'cleaner']
