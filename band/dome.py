@@ -97,8 +97,7 @@ class Dome:
         async def wrapper(request):
             return await request_handler(request, handler)
 
-        logger.info('Adding route', path=path,
-                    wrap=wrapper, routekwargs=routekwargs)
+        logger.info('Adding route', path=path, routekwargs=routekwargs)
         self._routes.append(
             RouteDef('GET', path, wrapper, routekwargs))
         self._routes.append(
@@ -190,9 +189,9 @@ def worker(*args, **kwargs):
     return wrapper
 
 
-def cleaner(*args, **kwargs):
+def unloader(*args, **kwargs):
     """
-    Register function as cleaner.
+    Register function as unload handler.
     Will be executed on application shotdown
     """
     def wrapper(handler):
@@ -205,4 +204,4 @@ dome = Dome()
 expose = Expose(dome)
 
 
-__all__ = ['Dome', 'dome', 'expose', 'worker', 'cleaner']
+__all__ = ['Dome', 'dome', 'expose', 'worker', 'unloader']
