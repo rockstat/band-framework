@@ -2,5 +2,5 @@
 patch:
 	bumpversion patch
 
-minore:
-	bumpversion minore
+minor:
+	bumpversion minor
