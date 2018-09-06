@@ -16,3 +16,7 @@ ENRICH  = 'enrich'
 
 NOTIFY_ALIVE = '__iamalive'
 REQUEST_STATUS = '__status'
+
+
+HUMA_LOGF = '%(asctime)s %(levelname)s %(message)s'
+JSON_LOGF = '{ "loggerName":"%(name)s", "asciTime":"%(asctime)s", "levelNo":"%(levelno)s", "levelName":"%(levelname)s", "message":"%(message)s"}'

@@ -62,7 +62,7 @@ class RedisPubSubRPC(AsyncClient):
                 msg['from'] = mparts[2]
         # answer
         if 'result' in msg:
-            # logger.debug('received with result: %s', msg)
+            # logger.debug('received with result', msg=msg)
             if 'id' in msg and msg['id'] in self.pending:
                 self.pending[msg['id']].set_result(msg)
         # call to served methods
@@ -80,7 +80,7 @@ class RedisPubSubRPC(AsyncClient):
             await self._app['scheduler'].spawn(self.chan_reader(chan))
 
     async def chan_reader(self, chan):
-        logger.info('starting reader for channel %s', chan)
+        logger.info('starting reader for channel', chan=chan)
         while True:
             try:
                 client = await redis_factory.create_client()
@@ -160,8 +160,8 @@ class RedisPubSubRPC(AsyncClient):
             async with timeout(self.rpc_timeout) as cm:
                 await req
         except asyncio.TimeoutError:
-            logger.error('rpc.send_message TimeoutError. to: %s ; id %s', to,
-                         req_id)
+            logger.error('rpc.send_message TimeoutError', to=to,
+                         req_id=req_id)
         except asyncio.CancelledError:
             logger.error('CancelledError')
         finally:

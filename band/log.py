@@ -1,23 +1,56 @@
-import logging
 import sys
-import coloredlogs
-from .config.env import environ
-from pprint import pprint
+import ujson
+import logging
+import structlog
+import datetime
+from structlog import get_logger, wrap_logger, BoundLogger
+# from structlog.stdlib import LoggerFactory
+from structlog.processors import JSONRenderer
+from .lib.helpers import envIsYes
 
-HUMAN_FORMAT = '%(asctime)s %(levelname)s %(message)s'
-JSON_FORMAT = '{ "loggerName":"%(name)s", "asciTime":"%(asctime)s", "levelNo":"%(levelno)s", "levelName":"%(levelname)s", "message":"%(message)s"}'
+from pythonjsonlogger import jsonlogger
 
-logger = logging.getLogger(__name__)
 
-json_logs = environ.get('JSON_LOGS', '0').lower() in ("yes", "true", "t", "1")
+def dumper(*args, **kwargs):
+    kwargs.pop('default', None)
+    kwargs['ensure_ascii'] = False
+    return ujson.dumps(*args, **kwargs)
 
-if json_logs:
-    logger.setLevel(logging.DEBUG)
-    log_formatter = logging.Formatter(JSON_FORMAT)
-    log_handler = logging.StreamHandler()
-    log_handler.setFormatter(log_formatter)
-    logger.addHandler(log_handler)
+
+logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+logHandler = logging.StreamHandler(sys.stdout)
+logHandler.setFormatter(jsonlogger.JsonFormatter())
+
+
+processors = [
+    structlog.stdlib.add_logger_name,
+    structlog.stdlib.add_log_level,
+    # structlog.stdlib.PositionalArgumentsFormatter(),
+    structlog.processors.StackInfoRenderer(),
+    structlog.processors.format_exc_info,
+    # structlog.processors.UnicodeDecoder(),
+    # structlog.stdlib.render_to_log_kwargs,
+    structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M.%S", utc=False),
+]
+
+
+if envIsYes('JSON_LOGS'):
+    processors.append(JSONRenderer(serializer=dumper))
+    pass
+
 else:
-    coloredlogs.install(level='DEBUG', stream=sys.stdout, fmt=HUMAN_FORMAT),
+    processors.append(structlog.dev.ConsoleRenderer())
+
+
+structlog.configure(
+    processors=processors,
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    # cache_logger_on_first_use=True,
+)
+
+logger = structlog.get_logger()
+
 
 x__all__ = ['logger']

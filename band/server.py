@@ -19,7 +19,7 @@ def loop_exc(loop, context):
     exception = context.get('exception', None)
     exc_info = (type(exception), exception,
                 exception.__traceback__) if exception else None
-    logger.exception('loop ex %s, %s', message, exception, exc_info=exc_info)
+    logger.exception('loop ex', message=message, exception=exception, exc_info=exc_info)
 
 
 loop = uvloop.new_event_loop()
@@ -31,6 +31,7 @@ app = web.Application(
 
 
 def add_routes(routes):
+    logger.debug('Attaching routes')
     app.router.add_routes(routes)
 
 

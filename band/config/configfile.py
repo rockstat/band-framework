@@ -24,14 +24,13 @@ try:
     data.update({
         # use pre configured or detected service name
         'name': data.get('name', name_env),
-        'env': env
+        'env': env,
+        '_pid': os.getpid(),
+        '_cwd': os.getcwd()
     })
     settings = Prodict.from_dict(data)
 except Exception:
     logger.exception('config')
 
-logger.info('pid: %s', os.getpid())
-logger.info('cwd:%s', os.getcwd())
-logger.info('settings: %s', settings)
 
 __all__ = ['completely_config', 'settings']

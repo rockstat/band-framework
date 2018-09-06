@@ -23,7 +23,7 @@ More at project documentation
         'pyyaml', 'inflection', 'jinja2', 'coloredlogs', 'asyncio', 'uvloop',
         'aiohttp', 'aioredis', 'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
         'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests', 'python-dotenv',
-        'prodict', 'ujson', 'asimplech>=0.1.7', 'arrow'
+        'prodict', 'ujson', 'asimplech>=0.1.7', 'arrow', 'structlog', 'colorama'
     ],
     zip_safe=False,
     classifiers=[

@@ -6,6 +6,24 @@ def json_response(result, status=200, request=None):
     return _json_response(result, headers=cors_headers(request=request))
 
 
+async def request_handler(request, handler):
+    # get query
+    query = dict(**request.query)
+    # url params
+    if request.method == 'POST':
+        if request.content_type == 'application/json':
+            raw = await request.text()
+            if raw:
+                query.update(ujson.loads(raw))
+        else:
+            post = await request.post()
+            query.update(post)
+    # url params
+    query.update(request.match_info)
+    result = await handler(**query)
+    return json_response(result, request=request)
+
+
 def say_cors_yes(request=None):
     return Response(headers=cors_headers(request=request))
 

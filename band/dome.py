@@ -2,7 +2,7 @@ import ujson
 import jsonrpcserver
 from jsonrpcserver.aio import AsyncMethods
 from aiohttp.web import RouteTableDef, RouteDef
-from .lib.http import json_response, json_middleware
+from .lib.http import json_response, json_middleware, request_handler
 from .log import logger
 from .lib.structs import MethodRegistration
 
@@ -13,6 +13,7 @@ LISTENER = 'listener'
 HANDLER = 'handler'
 ENRICHER = 'enricher'
 NONE = 'none'
+
 
 class Tasks():
     def __init__(self):
@@ -93,33 +94,20 @@ class Dome:
         self._methods.add_method(
             handler, name=name, role=role, reg_options=reg_options)
 
-        async def request_handler(request):
-            # get query
-            query = dict(**request.query)
-            # url params
-            if request.method == 'POST':
-                if request.content_type == 'application/json':
-                    raw = await request.text()
-                    if raw:
-                        query.update(ujson.loads(raw))
-                else:
-                    post = await request.post()
-                    query.update(post)
-            # url params
-            query.update(request.match_info)
-            result = await handler(**query)
-            return json_response(result, request=request)
+        async def wrapper(request):
+            return await request_handler(request, handler)
 
+        logger.info('Adding route', path=path,
+                    wrap=wrapper, routekwargs=routekwargs)
         self._routes.append(
-            RouteDef('GET', path, request_handler, routekwargs))
+            RouteDef('GET', path, wrapper, routekwargs))
         self._routes.append(
-            RouteDef('POST', path, request_handler, routekwargs))
+            RouteDef('POST', path, wrapper, routekwargs))
 
     def expose(self, *args, **kwargs):
         def inner(handler):
             self.expose_method(handler, *args, **kwargs)
             return handler
-
         return inner
 
     def startup(self, *args, **kwargs):
@@ -154,9 +142,11 @@ class Expose:
         alias=other_service If needed possible to promote service by different name. Affected only service name in front service
         """
         print(name, path, alias)
+
         def wrapper(handler):
             print(handler)
-            self.dome.expose_method(handler, name=name, path=path, role=HANDLER)
+            self.dome.expose_method(
+                handler, name=name, path=path, role=HANDLER)
             return handler
         return wrapper
 
@@ -167,7 +157,8 @@ class Expose:
         keys: list of requested dispatching keys
         """
         def wrapper(handler):
-            self.dome.expose_method(handler, role=ENRICHER)
+            self.dome.expose_method(
+                handler, props=[*props], keys=[*keys], role=ENRICHER)
             return handler
         return wrapper
 

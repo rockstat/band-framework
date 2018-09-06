@@ -2,9 +2,11 @@ import importlib
 import os
 
 from .constants import *
-from .config.env import *
-from .log import *
 from .config.configfile import settings
+from .log import *
+
+logger.info('final configuration', settings=settings)
+
 from .lib.structs import *
 from .lib.http import json_response
 from .lib.redis import RedisFactory
