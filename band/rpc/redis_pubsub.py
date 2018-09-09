@@ -8,7 +8,7 @@ import ujson
 import itertools
 import aioredis
 
-from .. import dome, logger, redis_factory, BROADCAST, ENRICH
+from .. import logger, redis_factory, dome, BROADCAST, ENRICH
 
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
@@ -171,29 +171,4 @@ class RedisPubSubRPC(AsyncClient):
         return None if cm.expired else self.process_response(req.result())
 
 
-# Attaching to aiohttp
-async def redis_rpc_startup(app):
-    await app['scheduler'].spawn(app['rpc'].writer())
-    await app['scheduler'].spawn(app['rpc'].reader())
-    # app['rrpc_w'] = asyncio.ensure_future(
-    #     )  # app.loop.create_task(app['rpc'].writer())
-    # app['rrpc_r'] = asyncio.ensure_future(
-    #     )  # app.loop.create_task(app['rpc'].reader())
-
-
-async def redis_rpc_cleanup(app):
-    # app['rrpc_r'].cancel()
-    # await asyncio.wait_for(app['rrpc_r'], timeout=5)
-    # app['rrpc_w'].cancel()
-    # await asyncio.wait_for(app['rrpc_w'], timeout=5)
-    pass
-
-
-def attach_redis_rpc(app, name, **kwargs):
-    rpc = app['rpc'] = RedisPubSubRPC(name=name, app=app, **kwargs)
-    app.on_startup.append(redis_rpc_startup)
-    app.on_shutdown.append(redis_rpc_cleanup)
-    return rpc
-
-
-__all__ = ['RedisPubSubRPC', 'attach_redis_rpc']
+__all__ = ['RedisPubSubRPC']

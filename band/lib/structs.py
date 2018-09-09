@@ -10,8 +10,7 @@ class DotDict(dict):
     def __setattr__(self, attr, value):
         self[attr] = value
 
-_MethodRegistration = namedtuple('MethodRegistration', 'method role options');
-class MethodRegistration(_MethodRegistration):
+class MethodRegistration(namedtuple('MethodRegistration', 'method role options')):
     __slots__ = ()
     method: str
     role: str

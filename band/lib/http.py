@@ -1,9 +1,13 @@
-from aiohttp.web import json_response as _json_response, middleware, HTTPException, Response
 import time
+import ujson
+from aiohttp.web import (json_response as _json_response,
+                         middleware, HTTPException, Response, RouteTableDef, RouteDef)
+
 from band import logger
 
+
 def json_response(result, status=200, request=None):
-    return _json_response(result, headers=cors_headers(request=request))
+    return _json_response(result, status=status, headers=cors_headers(request=request))
 
 
 async def request_handler(request, handler):
@@ -24,6 +28,18 @@ async def request_handler(request, handler):
     return json_response(result, request=request)
 
 
+def add_http_handler(handler, path, **kwargs):
+    logger.info('Adding route', path=path)
+
+    async def wrapper(request):
+        return await request_handler(request, handler)
+
+    return [
+        RouteDef('GET', path, wrapper, kwargs),
+        RouteDef('POST', path, wrapper, kwargs)
+    ]
+
+
 def say_cors_yes(request=None):
     return Response(headers=cors_headers(request=request))
 
@@ -42,8 +58,10 @@ async def naive_cors_middleware(request, handler):
     """
     Simple CORS middleware to access api from dashboard
     """
-    return say_cors_yes(
-        request) if request.method == 'OPTIONS' else await handler(request)
+    if request.method == 'OPTIONS':
+        return say_cors_yes(request)
+    else:
+        return await handler(request)
 
 
 @middleware

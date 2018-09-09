@@ -1,3 +1,9 @@
+# roles
+
+LISTENER = 'listener'
+HANDLER = 'handler'
+ENRICHER = 'enricher'
+ROLES = set([LISTENER, ENRICHER, HANDLER])
 
 # Services
 DIRECTOR_SERVICE = 'director'
@@ -7,10 +13,10 @@ FRONTIER_SERVICE = 'frontier'
 RESULT_OPERATING = 'operating'
 RESULT_PONG = 'pong'
 OK = 'o-o-ok'
-RESULT_OK = 'ok'
-RESULT_NOT_FOUND = 'not found'
-RESULT_NOT_LOADED_YET = 'not loaded yet'
-RESULT_INTERNAL_ERROR = 'internal server error'
+RESULT_OK = 200
+RESULT_NOT_FOUND = 404
+RESULT_BAD_ARGS = 404
+RESULT_INTERNAL_ERROR = 500
 BROADCAST  = 'broadcast'
 ENRICH  = 'enrich'
 

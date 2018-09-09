@@ -1,12 +1,13 @@
 from asyncio import sleep
 from time import time
 from datetime import timedelta
-from .. import (settings, dome, logger, rpc, DIRECTOR_SERVICE, NOTIFY_ALIVE)
+from . import (settings, dome, expose, worker, logger,
+               rpc, DIRECTOR_SERVICE, NOTIFY_ALIVE)
 
 START_AT = round(time() * 1000)
 
 
-@dome.tasks.add
+@worker()
 async def promote():
     logger.info('starting announcing service')
     while True:
@@ -21,7 +22,7 @@ async def promote():
         await sleep(5)
 
 
-@dome.expose()
+@expose()
 async def __status(**params):
     """
     Service status

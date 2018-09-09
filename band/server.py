@@ -7,11 +7,6 @@ from .lib.http import naive_cors_middleware, json_middleware, error_middleware
 from . import dome
 
 __all__ = ['add_routes', 'start_server', 'app']
-"""
-Loop error handler example
-https://git.duniter.org/clients/python/sakia/blob/master/src/sakia/main.py
-"""
-
 
 
 def loop_exc(loop, context):
@@ -19,7 +14,8 @@ def loop_exc(loop, context):
     exception = context.get('exception', None)
     exc_info = (type(exception), exception,
                 exception.__traceback__) if exception else None
-    logger.exception('loop ex', message=message, exception=exception, exc_info=exc_info)
+    logger.exception('loop ex', message=message,
+                     exception=exception, exc_info=exc_info)
 
 
 loop = uvloop.new_event_loop()

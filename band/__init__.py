@@ -12,17 +12,20 @@ from .lib.http import json_response
 from .lib.redis import RedisFactory
 redis_factory = RedisFactory(**settings)
 
-from .dome import *
+from .registry import Dome, worker, cleanup
+dome = Dome.instance()
+expose = dome.exposeour
+
 from .server import app, start_server, add_routes
-from .lib.jobs import attach_scheduler, run_task
-from .lib.redis_pubsub import attach_redis_rpc
+from .rpc.redis_pubsub import RedisPubSubRPC
+from .bootstrap import run_task, attach_scheduler, attach_redis_rpc
+
 
 attach_scheduler(app)
 rpc = attach_redis_rpc(app, **settings)
 
 # if settings.name != DIRECTOR_SERVICE:
-importlib.import_module('band.lib.promote', 'band')
+importlib.import_module('band.promote', 'band')
 
 # libs
-
 from asimplech import ClickHouse
