@@ -1,9 +1,10 @@
-
-patch:
+bump-patch:
 	bumpversion patch
 
-minor:
+bump-minor:
 	bumpversion minor
+
+
 
 build_image:
 	docker build -t rockstat/band-base-py .
