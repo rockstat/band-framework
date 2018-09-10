@@ -10,89 +10,6 @@ from .constants import ENRICHER, HANDLER, LISTENER, ROLES
 from .rpc.server import AsyncRolesMethods
 
 
-class Dome:
-
-    __instance = None
-
-    @staticmethod
-    def instance():
-        if Dome.__instance == None:
-            Dome.__instance = Dome()
-        return Dome.__instance
-
-    def __init__(self):
-        self._executor = None
-        self._startup = list()
-        self._shutdown = list()
-        self._routes = []
-        self._methods = AsyncRolesMethods()
-        self._expose = None
-
-    def expose_method(self,
-                      handler,
-                      role,
-                      name=None,
-                      path=None,
-                      keys=None,
-                      props=None,
-                      alias=None,
-                      **kwargs):
-        name = name or handler.__name__
-        path = path or f'/{name}'
-
-        if role == ENRICHER and not keys:
-            raise ValueError('Keys property must be present')
-
-        reg = none_none(dict(
-            keys=keys,
-            props=props,
-            alias=alias
-        ))
-
-        self._methods.add_method(
-            handler, name=name, role=role, reg=reg)
-
-        self._routes += add_http_handler(handler, path)
-
-    @property
-    def exposeour(self):
-        if not self._expose:
-            self._expose = Expose(self)
-        return self._expose
-
-    def expose(self, *args, **kwargs):
-        """
-        Deprecated API method. Will be removed soon!s
-        """
-        def inner(handler):
-            logger.warn(f"Called {handler.__name__}.Deprecated API method. Will be removed soon!")
-            self.expose_method(handler, *args, **kwargs)
-            return handler
-        return inner
-
-    def add_startup(self, task):
-        self._startup.append(task)
-
-    def add_shutdown(self, task):
-        self._shutdown.append(task)
-
-    @property
-    def startup(self):
-        return self._startup
-
-    @property
-    def shutdown(self):
-        return self._shutdown
-
-    @property
-    def methods(self):
-        return self._methods
-
-    @property
-    def routes(self):
-        return self._routes
-
-
 class Expose:
     def __init__(self, dome):
         self._dome = dome
@@ -142,6 +59,83 @@ class Expose:
         return wrapper
 
 
+class Dome:
+
+    __instance = None
+
+    @staticmethod
+    def instance():
+        if Dome.__instance == None:
+            Dome.__instance = Dome()
+        return Dome.__instance
+
+    def __init__(self):
+        self._executor = None
+        self._startup = list()
+        self._shutdown = list()
+        self._routes = []
+        self._methods = AsyncRolesMethods()
+        self._expose: Expose = Expose(self)
+
+    def expose_method(self,
+                      handler,
+                      role,
+                      name=None,
+                      path=None,
+                      keys=None,
+                      props=None,
+                      alias=None,
+                      **kwargs):
+        name = name or handler.__name__
+        path = path or f'/{name}'
+
+        if role == ENRICHER and not keys:
+            raise ValueError('Keys property must be present')
+
+        reg = none_none(dict(
+            keys=keys,
+            props=props,
+            alias=alias
+        ))
+
+        self._methods.add_method(
+            handler, name=name, role=role, reg=reg)
+
+        self._routes += add_http_handler(handler, path)
+
+    @property
+    def exposeour(self) -> Expose:
+        return self._expose
+
+    def expose(self, *args, **kwargs):
+        """
+        Deprecated API method. Will be removed soon!s
+        """
+        return self._expose(*args, **kwargs)
+
+    def add_startup(self, task):
+        self._startup.append(task)
+
+    def add_shutdown(self, task):
+        self._shutdown.append(task)
+
+    @property
+    def startup(self):
+        return self._startup
+
+    @property
+    def shutdown(self):
+        return self._shutdown
+
+    @property
+    def methods(self):
+        return self._methods
+
+    @property
+    def routes(self):
+        return self._routes
+
+
 def worker():
     """
     Register function as worker.
@@ -166,4 +160,4 @@ def cleanup():
     return wrapper
 
 
-__all__ = ['Dome']
+__all__ = ['Dome', 'Expose', 'worker', 'cleanup']

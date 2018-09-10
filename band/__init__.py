@@ -15,9 +15,9 @@ from .lib.http import json_response
 from .lib.redis import RedisFactory
 redis_factory = RedisFactory(**settings)
 
-from .registry import Dome, worker, cleanup
+from .registry import Dome, Expose, worker, cleanup
 dome = Dome.instance()
-expose = dome.exposeour
+expose: Expose = dome.exposeour
 
 from .server import app, start_server, add_routes
 from .rpc.redis_pubsub import RedisPubSubRPC
