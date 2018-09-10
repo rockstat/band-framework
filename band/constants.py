@@ -17,8 +17,8 @@ RESULT_OK = 200
 RESULT_NOT_FOUND = 404
 RESULT_BAD_ARGS = 404
 RESULT_INTERNAL_ERROR = 500
-BROADCAST  = 'broadcast'
-ENRICH  = 'enrich'
+BROADCAST = 'broadcast'
+ENRICH = 'enrich'
 
 NOTIFY_ALIVE = '__iamalive'
 REQUEST_STATUS = '__status'
@@ -26,3 +26,5 @@ REQUEST_STATUS = '__status'
 
 HUMA_LOGF = '%(asctime)s %(levelname)s %(message)s'
 JSON_LOGF = '{ "loggerName":"%(name)s", "asciTime":"%(asctime)s", "levelNo":"%(levelno)s", "levelName":"%(levelname)s", "message":"%(message)s"}'
+
+RESP_META_KEY = '__band_meta'
