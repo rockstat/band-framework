@@ -4,7 +4,9 @@ import os
 from .constants import *
 from .config.configfile import settings
 from .log import *
-from .lib.response import *
+from .lib.response import BandResponse
+
+response = BandResponse()
 
 logger.info('final configuration', settings=settings)
 

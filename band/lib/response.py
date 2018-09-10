@@ -5,16 +5,19 @@ RESP_REDIRECT = 'redirect'
 RESP_ERROR = 'error'
 
 
-def redirect_response(location, httpCode=302, data={}):
-    return {RESP_META_KEY: dict(type=RESP_REDIRECT, location=location, httpCode=httpCode, data=data)}
+class BandResponse:
+
+    def __call__(self, data):
+        return data
+
+    def redirect(self, location, httpCode=302, data={}):
+        return {RESP_META_KEY: dict(type=RESP_REDIRECT, location=location, httpCode=httpCode, data=data)}
+
+    def pixel(self, data={}):
+        return {RESP_META_KEY: dict(type=RESP_PIXEL, data={})}
+
+    def error(self, message="", httpCode=500, data={}):
+        return {RESP_META_KEY: dict(type=RESP_ERROR, errorMessage=message, httpCode=httpCode, data=data)}
 
 
-def pixel_response(data={}):
-    return {RESP_META_KEY: dict(type=RESP_PIXEL, data={})}
-
-
-def error_response(message="", httpCode=500, data={}):
-    return {RESP_META_KEY: dict(type=RESP_ERROR, errorMessage=message, httpCode=httpCode, data=data)}
-
-
-__all__ = ['pixel', 'redirect', 'error']
+__all__ = ['BandResponse']
