@@ -3,7 +3,7 @@ import ujson
 from aiohttp.web import (json_response as _json_response,
                          middleware, HTTPException, Response, RouteTableDef, RouteDef)
 
-from band import logger
+from band import logger, error
 
 
 def json_response(result, status=200, request=None):
@@ -24,8 +24,13 @@ async def request_handler(request, handler):
             query.update(post)
     # url params
     query.update(request.match_info)
-    result = await handler(**query)
-    return json_response(result, request=request)
+    try:
+        result = await handler(**query)
+        return json_response(result, request=request)
+    except Exception:
+        logger.exception("Exc")
+        return error("Error while executing controller")
+    
 
 
 def add_http_handler(handler, path, **kwargs):

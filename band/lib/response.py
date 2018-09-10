@@ -13,7 +13,7 @@ def pixel(data={}):
     return {RESP_META_KEY: dict(type=RESP_PIXEL, data={})}
 
 
-def error(message, httpCode=500, data={}):
+def error(message="", httpCode=500, data={}):
     return {RESP_META_KEY: dict(type=RESP_ERROR, errorMessage=message, httpCode=httpCode, data=data)}
 
 
