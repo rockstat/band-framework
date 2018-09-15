@@ -144,17 +144,3 @@ Prune unused docker containers
 and images
 
     docker image prune --all
-
-
-## Bugs
-
-    2018-06-06 10:23:35 director band.log[1] DEBUG redis_rpc_reader: finally
-    2018-06-06 10:23:35 director band.log[1] INFO redis_rpc_reader: entering read loop
-    2018-06-06 10:23:35 director band.log[1] DEBUG redis_rpc_reader: finally
-    2018-06-06 10:23:35 director band.log[1] INFO redis_rpc_reader: entering read loop
-    2018-06-06 10:23:35 director band.log[1] DEBUG redis_rpc_reader: finally
-    2018-06-06 10:23:35 director band.log[1] INFO redis_rpc_reader: entering read loop
-    2018-06-06 10:23:35 director band.log[1] DEBUG redis_rpc_reader: finally
-    2018-06-06 10:23:35 director band.log[1] INFO redis_rpc_reader: entering read loop
-    2018-06-06 10:23:35 director band.log[1] DEBUG redis_rpc_reader: finally
-    2018-06-06 10:23:35 director band.log[1] INFO redis_rpc_reader: entering read loop
