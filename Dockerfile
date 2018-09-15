@@ -1,6 +1,7 @@
 FROM python:3.6
 LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>"
 
+ARG VERSION=0.7.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		wget \
         curl \
