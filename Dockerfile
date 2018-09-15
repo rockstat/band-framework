@@ -1,7 +1,6 @@
 FROM python:3.6
-LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>"
+LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>" band.band-base.version=0.7.1
 
-ARG VERSION=0.7.1
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		wget \
         curl \
