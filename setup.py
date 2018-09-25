@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='band',
-    version=__VERSION__,
+    version='0.7.1',
     author='Dmitry Rodin',
     author_email='madiedinro@gmail.com',
     license='MIT',

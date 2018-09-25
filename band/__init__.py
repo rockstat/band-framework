@@ -1,3 +1,5 @@
+__VERSION__ = '0.7.1'
+
 import importlib
 import os
 

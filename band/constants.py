@@ -7,7 +7,7 @@ ROLES = set([LISTENER, ENRICHER, HANDLER])
 
 # Services
 DIRECTOR_SERVICE = 'director'
-FRONTIER_SERVICE = 'frontier'
+FRONTIER_SERVICE = 'front'
 
 # Text statuses
 RESULT_OPERATING = 'operating'
