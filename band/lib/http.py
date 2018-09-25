@@ -95,11 +95,11 @@ async def json_middleware(request, handler):
     #         raise
     #     message = ex.reason
     except Exception as e:
-        logge
+        logger.exception("json middleware exception")
         response = {'error': str(e)}
         status_code = 500
 
-    return _json_response(response, headers=cors_headers(request=request))
+    return _json_response(response, headers=cors_headers(request=request), status=status_code)
 
 
 # headers = dict()

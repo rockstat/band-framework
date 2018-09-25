@@ -5,7 +5,7 @@ from prodict import Prodict as pdict
 
 from .lib.http import add_http_handler
 from .log import logger
-from .lib.helpers import none_none
+from .lib.helpers import without_none
 from .constants import ENRICHER, HANDLER, LISTENER, ROLES
 from .rpc.server import AsyncRolesMethods
 
@@ -21,10 +21,7 @@ class Expose:
         path="/hello/:name" For services exposed by HTTP you can configure path with with params
         alias=other_service If needed possible to promote service by different name. Affected only service name in front service
         """
-        print(name, path, alias)
-
         def wrapper(handler):
-            print(handler)
             self._dome.expose_method(
                 handler, name=name, path=path, role=HANDLER)
             return handler
@@ -92,14 +89,13 @@ class Dome:
         if role == ENRICHER and not keys:
             raise ValueError('Keys property must be present')
 
-        reg = none_none(dict(
+        registration = without_none(dict(
             keys=keys,
             props=props,
             alias=alias
         ))
-
         self._methods.add_method(
-            handler, name=name, role=role, reg=reg)
+            handler, name=name, role=role, registration=registration)
 
         self._routes += add_http_handler(handler, path)
 

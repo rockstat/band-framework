@@ -17,7 +17,6 @@ async def scheduler_startup(app):
     logger.info('Starting scheduler')
     app['scheduler'] = await aiojobs.create_scheduler(exception_handler=None)
     logger.info('Starting startup handlers')
-    print(dome.startup)
     for task in dome.startup:
         try:
             logger.debug(f'Executing worker {task.__name__}')

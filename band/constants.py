@@ -28,3 +28,4 @@ HUMA_LOGF = '%(asctime)s %(levelname)s %(message)s'
 JSON_LOGF = '{ "loggerName":"%(name)s", "asciTime":"%(asctime)s", "levelNo":"%(levelno)s", "levelName":"%(levelname)s", "message":"%(message)s"}'
 
 RESP_META_KEY = '__band_meta'
+RESP_TYPE_KEY = '_response___type'

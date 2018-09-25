@@ -2,7 +2,7 @@ import sys
 import ujson
 import logging
 import structlog
-from .lib.helpers import envIsYes
+from .lib.helpers import env_is_true
 
 from pythonjsonlogger import jsonlogger
 
@@ -30,7 +30,7 @@ processors = [
 ]
 
 
-if envIsYes('JSON_LOGS'):
+if env_is_true('JSON_LOGS'):
     processors.append(structlog.processors.JSONRenderer(serializer=dumper))
     pass
 

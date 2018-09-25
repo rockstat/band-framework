@@ -13,12 +13,12 @@ class AsyncRolesMethods(AsyncMethods):
         super().__init__(*args, **kwargs)
         self._roles = dict()
 
-    def add_method(self, handler, reg={}, *args, **kwargs):
+    def add_method(self, handler, registration={}, *args, **kwargs):
         method_name = kwargs.pop('name', handler.__name__)
         role = kwargs.pop('role', None)
 
         self._roles[method_name] = MethodRegistration(
-            method=method_name, role=role, options=reg)
+            method=method_name, role=role, options=registration)
         self[method_name] = handler
 
     def add(self, *args, **kwargs):
