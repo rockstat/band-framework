@@ -1,3 +1,4 @@
+from typing import Dict, List
 import ujson
 import aiojobs
 
@@ -33,7 +34,7 @@ class Expose:
             return handler
         return wrapper
 
-    def enricher(self, props: list, keys: list):
+    def enricher(self, props: dict, keys: list):
         """
         Expose function and promote function as request enricher to front service
         props: list contains requests props in dot notation like ["sess.type"]
@@ -41,7 +42,7 @@ class Expose:
         """
         def wrapper(handler):
             self._dome.expose_method(
-                handler, props=[*props], keys=[*keys], role=ENRICHER)
+                handler, props={**props}, keys=[*keys], role=ENRICHER)
             return handler
         return wrapper
 
@@ -79,8 +80,8 @@ class Dome:
                       role,
                       name=None,
                       path=None,
-                      keys=None,
-                      props=None,
+                      keys: List=None,
+                      props: Dict=None,
                       alias=None,
                       **kwargs):
         name = name or handler.__name__
@@ -94,6 +95,8 @@ class Dome:
             props=props,
             alias=alias
         ))
+
+        print(registration)
         self._methods.add_method(
             handler, name=name, role=role, registration=registration)
 

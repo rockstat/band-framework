@@ -7,7 +7,7 @@ from band import logger, response
 
 
 def json_response(result, status=200, request=None):
-    return _json_response(result, status=status, headers=cors_headers(request=request))
+    return _json_response(body=ujson.dumps(result, ensure_ascii=False), status=status, headers=cors_headers(request=request))
 
 
 async def request_handler(request, handler):
@@ -76,30 +76,31 @@ async def error_middleware(request, handler):
         return response
 
     except HTTPException as ex:
-        return _json_response({'error': ex.reason}, status=ex.status)
+        logger.exception('error middleware http ex')
+        return json_response({'error': ex.reason}, status=ex.status, request=request)
 
     except Exception as ex:
         logger.exception('error middleware ex')
-        return _json_response({'error': 'Internal server error'}, status=500)
+        return json_response({'error': 'Internal server error'}, status=500, request=request)
 
     return error_middleware
 
 
-@middleware
-async def json_middleware(request, handler):
-    status_code = 200
-    try:
-        response = await handler(request)
-    # except web.HTTPException as ex:
-    #     if ex.status != 404:
-    #         raise
-    #     message = ex.reason
-    except Exception as e:
-        logger.exception("json middleware exception")
-        response = {'error': str(e)}
-        status_code = 500
+# @middleware
+# async def json_middleware(request, handler):
+#     status_code = 200
+#     try:
+#         response = await handler(request)
+#     # except web.HTTPException as ex:
+#     #     if ex.status != 404:
+#     #         raise
+#     #     message = ex.reason
+#     except Exception as e:
+#         logger.exception("json middleware exception")
+#         response = {'error': str(e)}
+#         status_code = 500
 
-    return _json_response(response, headers=cors_headers(request=request), status=status_code)
+#     return _json_response(response, headers=cors_headers(request=request), status=status_code)
 
 
 # headers = dict()
@@ -108,6 +109,6 @@ async def json_middleware(request, handler):
 # headers['Access-Control-Allow-Headers'] = 'X-Requested-With,Content-Type'
 
 __all__ = [
-    'json_response', 'say_cors_yes', 'json_middleware',
+    'json_response', 'say_cors_yes',
     'naive_cors_middleware', 'error_middleware'
 ]

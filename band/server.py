@@ -3,7 +3,7 @@ import uvloop
 import asyncio
 
 from .log import logger
-from .lib.http import naive_cors_middleware, json_middleware, error_middleware
+from .lib.http import naive_cors_middleware, error_middleware
 from . import dome
 
 __all__ = ['add_routes', 'start_server', 'app']
