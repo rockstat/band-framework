@@ -15,34 +15,37 @@ class Expose:
     def __init__(self, dome):
         self._dome = dome
 
-    def handler(self, name=None, path=None, alias=None):
-        """
-        Expose function and promote function as request handler to front service.
-        name: 
-        path="/hello/:name" For services exposed by HTTP you can configure path with with params
-        alias=other_service If needed possible to promote service by different name. Affected only service name in front service
-        """
-        def wrapper(handler):
-            self._dome.expose_method(
-                handler, name=name, path=path, role=HANDLER)
-            return handler
-        return wrapper
-
     def __call__(self, *args, **kwargs):
         def wrapper(handler):
             self._dome.expose_method(handler, role=None, *args, **kwargs)
             return handler
         return wrapper
+    
+    def handler(self, name=None, path=None, alias=None, timeout=None):
+        """
+        Expose function and promote function as request handler to front service.
+        name: 
+        path: "/hello/:name" For services exposed by HTTP you can configure path with with params
+        alias: other_service If needed possible to promote service by different name. 
+        Affected only service name in front service
+        timeout: custom response wait timeout
+        """
+        def wrapper(handler):
+            self._dome.expose_method(
+                handler, name=name, path=path, role=HANDLER, timeout=None)
+            return handler
+        return wrapper
 
-    def enricher(self, props: dict, keys: list):
+    def enricher(self, props: dict, keys: list, timeout=None):
         """
         Expose function and promote function as request enricher to front service
         props: list contains requests props in dot notation like ["sess.type"]
         keys: list of requested dispatching keys
+        timeout: custom response wait timeout
         """
         def wrapper(handler):
             self._dome.expose_method(
-                handler, props={**props}, keys=[*keys], role=ENRICHER)
+                handler, props={**props}, keys=[*keys], role=ENRICHER, timeout=timeout)
             return handler
         return wrapper
 
@@ -82,6 +85,7 @@ class Dome:
                       path=None,
                       keys: List=None,
                       props: Dict=None,
+                      timeout=None,
                       alias=None,
                       **kwargs):
         name = name or handler.__name__
