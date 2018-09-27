@@ -15,11 +15,12 @@ env:
 services:
 - docker
 script:
-- docker build -t $PROJECT_NAME .
+- cat Dockerfile | sed  "s/\:latest/\:$TAG/g" > Dockerfile.tag
+- docker build -t $PROJECT_NAME -f Dockerfile.tag .
 after_script:
 - docker images
 before_deploy:
-- docker tag $PROJECT_NAME $IMAGE_NAME:$TAG
+- docker tag "$PROJECT_NAME $IMAGE_NAME:$TAG"
 - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 deploy:
   provider: script
