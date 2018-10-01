@@ -12,8 +12,8 @@ setup(
     long_description="""
 About
 ---
-Orchestranion module start services in docker containers, examine and send configuraton to the frontier service.
-Includes microserivice framework for easy develop simple services and easy expose by https through frontier.
+Orchestranion module start services in docker containers, examine and send configuraton to the front service.
+Includes microserivice framework for easy develop simple services and easy expose by https through front.
 More at project documentation
     """,
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
