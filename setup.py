@@ -17,13 +17,14 @@ Includes microserivice framework for easy develop simple services and easy expos
 More at project documentation
     """,
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    url='https://github.com/rockstat/band',
+    url='https://github.com/rockstat/band-framework',
     include_package_data=True,
     install_requires=[
         'pyyaml', 'inflection', 'jinja2', 'coloredlogs', 'asyncio', 'uvloop',
         'aiohttp', 'aioredis', 'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
         'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests', 'python-dotenv',
-        'prodict', 'ujson', 'asimplech>=0.1.7', 'arrow', 'structlog', 'colorama', 'python-json-logger'
+        'prodict', 'ujson', 'simplech', 'asimplech', 'arrow', 'structlog', 'colorama', 
+        'python-json-logger'
     ],
     zip_safe=False,
     classifiers=[
@@ -33,6 +34,6 @@ More at project documentation
         'Programming Language :: Python :: 3.6',
     ],
     project_urls={  # Optional
-        'Homepage': 'https://rstat.org',
-        'Docs': 'https://rstat.org/docs'
+        'Homepage': 'https://rock.st',
+        'Docs': 'https://rock.st/docs'
     })
