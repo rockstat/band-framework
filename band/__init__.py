@@ -32,5 +32,3 @@ rpc = attach_redis_rpc(app, **settings)
 # if settings.name != DIRECTOR_SERVICE:
 importlib.import_module('band.promote', 'band')
 
-# libs
-from asimplech import ClickHouse
