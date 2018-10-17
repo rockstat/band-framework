@@ -22,7 +22,7 @@ More at project documentation
     install_requires=[
         'pyyaml==3.12', 'inflection', 'jinja2', 'coloredlogs', 'asyncio', 'uvloop',
         'aiohttp', 'aioredis', 'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
-        'jsonrpcserver', 'jsonrpcclient==2.6.0', 'requests', 'python-dotenv',
+        'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 'requests', 'python-dotenv',
         'prodict', 'ujson', 'simplech', 'arrow', 'structlog', 'colorama', 
         'python-json-logger'
     ],
