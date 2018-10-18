@@ -10,6 +10,7 @@ import aioredis
 
 from .. import logger, redis_factory, dome, BROADCAST, ENRICH
 
+RPC_TIMEOUT=2
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
     __slots__ = ()
@@ -39,7 +40,6 @@ class RedisPubSubRPC(AsyncClient):
         if self.redis_params.listen_enrich == True:
             self.channels.add(ENRICH)
         self.queue = asyncio.Queue()
-        self.rpc_timeout = 2
         self.id_gen = itertools.count(1)
 
     def log_request(self, request, extra=None, fmt=None, trim=False):
@@ -145,7 +145,7 @@ class RedisPubSubRPC(AsyncClient):
             data,
         ))
 
-    async def send_message(self, request, **kwargs):
+    async def send_message(self, request, __timeout=RPC_TIMEOUT, **kwargs):
         to = kwargs['to']
         # Outbound msgs queue
         await self.put(to, request.encode())
@@ -157,11 +157,10 @@ class RedisPubSubRPC(AsyncClient):
         try:
             req = self.pending[req_id] = asyncio.Future()
             # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
-            async with timeout(self.rpc_timeout) as cm:
+            async with timeout(__timeout) as cm:
                 await req
         except asyncio.TimeoutError:
-            logger.error('rpc.send_message TimeoutError', to=to,
-                         req_id=req_id)
+            logger.error('rpc.send_message TimeoutError', to=to, req_id=req_id)
         except asyncio.CancelledError:
             logger.error('CancelledError')
         finally:
