@@ -128,11 +128,15 @@ class RedisPubSubRPC(AsyncClient):
         self.queue.task_done()
         return item
 
-    async def request(self, to, method, **params):
+    async def request(self, to, method, timeout__=RPC_TIMEOUT, **params):
+        """
+        Arguments
+        timeout__ (int,str) Custom timeout
+        """
         mc = MethodCall(dest=to, method=method, source=self.name)
         req_id = str(next(self.id_gen))
         req = Request(mc.tos(), params, request_id=req_id)
-        return await self.send(req, request_id=req['id'], to=to)
+        return await self.send(req, request_id=req['id'], timeout__=int(timeout__), to=to)
 
     async def notify(self, to, method, **params):
         mc = MethodCall(dest=to, method=method, source=self.name)
@@ -145,7 +149,7 @@ class RedisPubSubRPC(AsyncClient):
             data,
         ))
 
-    async def send_message(self, request, __timeout=RPC_TIMEOUT, **kwargs):
+    async def send_message(self, request, timeout__=RPC_TIMEOUT, **kwargs):
         to = kwargs['to']
         # Outbound msgs queue
         await self.put(to, request.encode())
@@ -157,10 +161,10 @@ class RedisPubSubRPC(AsyncClient):
         try:
             req = self.pending[req_id] = asyncio.Future()
             # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
-            async with timeout(__timeout) as cm:
+            async with timeout(int(timeout__)) as cm:
                 await req
         except asyncio.TimeoutError:
-            logger.error('rpc.send_message TimeoutError', to=to, req_id=req_id)
+            logger.error(f'rpc.send_message TimeoutError (limited to {timeout__})', to=to, req_id=req_id)
         except asyncio.CancelledError:
             logger.error('CancelledError')
         finally:
