@@ -27,7 +27,7 @@ class BandResponse:
     def error(self, message="", statusCode=500, data={}):
         return {
             RESP_TYPE_KEY: RESP_ERROR,
-            'message': message,
+            'errorMessage': message,
             'statusCode': statusCode,
             'data': data,
         }

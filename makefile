@@ -8,7 +8,8 @@ bump-minor:
 	bumpversion minor
 
 build_image:
-	docker build -t rockstat/band-base-py .
+	docker build -t band-base-py .
+	docker tag rockstat/band-base-py rockstat/band-base-py:dev
 
 to_master:
 	sh -c 'git checkout master && git merge dev && git push origin master && git checkout dev'
