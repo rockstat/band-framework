@@ -61,7 +61,7 @@ class RedisPubSubRPC(AsyncClient):
                 msg['method'] = mparts[1]
                 msg['from'] = mparts[2]
         # answer
-        if 'result' in msg:
+        if 'result' in msg or 'error' in msg:
             # logger.debug('received with result', msg=msg)
             if 'id' in msg and msg['id'] in self.pending:
                 self.pending[msg['id']].set_result(msg)
@@ -164,7 +164,7 @@ class RedisPubSubRPC(AsyncClient):
             async with timeout(int(timeout__)) as cm:
                 await req
         except asyncio.TimeoutError:
-            logger.error(f'rpc.send_message TimeoutError (limited to {timeout__})', to=to, req_id=req_id)
+            logger.error(f'rpc.send_message timeout ({timeout__}s)', to=to, req_id=req_id)
         except asyncio.CancelledError:
             logger.error('CancelledError')
         finally:
