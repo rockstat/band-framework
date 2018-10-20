@@ -11,7 +11,7 @@ class BandResponse:
     def __call__(self, data):
         return data
 
-    def data(self, location, statusCode=200, data={}):
+    def data(self, data, statusCode=200):
         return {
             RESP_TYPE_KEY: RESP_DATA,
             'statusCode': statusCode,
