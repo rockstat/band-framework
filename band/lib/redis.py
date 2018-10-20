@@ -23,6 +23,9 @@ class RedisFactory:
         logger.debug('creating redis pool using to', redis_dns=self.redis_dsn)
         return await aioredis.create_pool(self.redis_dsn)
 
+    async def create_redis_pool(self, **kwargs):
+        return await aioredis.create_redis_pool(self.redis_dsn, **kwargs)
+
     async def close_client(self, client):
         # if client in self.wmap:
         #     for chan in self.wmap[client]:
