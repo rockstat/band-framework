@@ -98,8 +98,9 @@ class RedisPubSubRPC(AsyncClient):
                 logger.exception('reader exception')
                 await asyncio.sleep(1)
             finally:
-                await client.unsubscribe(chan)
-                await redis_factory.close_client(client)
+                if not client.closed:
+                    await client.unsubscribe(chan)
+                    await redis_factory.close_client(client)
 
     async def writer(self):
         while True:
@@ -112,7 +113,6 @@ class RedisPubSubRPC(AsyncClient):
                     self.queue.task_done()
                     async with pool.get() as conn:
                         await conn.execute('publish', name, msg)
-
             except asyncio.CancelledError:
                 logger.info('redis_rpc_writer: cancelled / break')
                 break
