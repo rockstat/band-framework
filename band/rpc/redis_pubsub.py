@@ -6,7 +6,6 @@ from prodict import Prodict
 import asyncio
 import ujson
 import itertools
-import aioredis
 
 from .. import logger, redis_factory, dome, BROADCAST, ENRICH
 
