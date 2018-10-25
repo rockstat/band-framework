@@ -1,5 +1,3 @@
-from ..constants import RESP_META_KEY, RESP_TYPE_KEY
-
 RESP_PIXEL = 'pixel'
 RESP_REDIRECT = 'redirect'
 RESP_ERROR = 'error'
@@ -13,14 +11,16 @@ class BandResponse:
 
     def data(self, data, statusCode=200):
         return {
-            RESP_TYPE_KEY: RESP_DATA,
+            'type__': RESP_DATA,
+            '_response___type': RESP_DATA, #TODO: remove it
             'statusCode': statusCode,
             'data': data
         }
 
     def redirect(self, location, statusCode=302, data={}):
         return {
-            RESP_TYPE_KEY: RESP_REDIRECT,
+            'type__': RESP_REDIRECT,
+            '_response___type': RESP_REDIRECT, #TODO: remove it
             'location': location,
             'statusCode': statusCode,
             'data': data
@@ -28,13 +28,15 @@ class BandResponse:
 
     def pixel(self, data={}):
         return {
-            RESP_TYPE_KEY: RESP_PIXEL,
+            'type__': RESP_PIXEL,
+            '_response___type': RESP_PIXEL, #TODO: remove it
             'data': data
         }
 
     def error(self, message="", statusCode=500, data={}):
         return {
-            RESP_TYPE_KEY: RESP_ERROR,
+            'type__': RESP_ERROR,
+            '_response___type': RESP_ERROR, #TODO: remove it
             'errorMessage': message,
             'statusCode': statusCode,
             'data': data,

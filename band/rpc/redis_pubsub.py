@@ -9,7 +9,9 @@ import itertools
 
 from .. import logger, redis_factory, dome, BROADCAST, ENRICH
 
-RPC_TIMEOUT=2
+# Seconds to receive response
+RPC_TIMEOUT = 2
+
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
     __slots__ = ()
@@ -135,7 +137,8 @@ class RedisPubSubRPC(AsyncClient):
         mc = MethodCall(dest=to, method=method, source=self.name)
         req_id = str(next(self.id_gen))
         req = Request(mc.tos(), params, request_id=req_id)
-        return await self.send(req, request_id=req['id'], timeout__=int(timeout__), to=to)
+        return await self.send(
+            req, request_id=req['id'], timeout__=int(timeout__), to=to)
 
     async def notify(self, to, method, **params):
         mc = MethodCall(dest=to, method=method, source=self.name)
@@ -163,7 +166,10 @@ class RedisPubSubRPC(AsyncClient):
             async with timeout(int(timeout__)) as cm:
                 await req
         except asyncio.TimeoutError:
-            logger.error(f'rpc.send_message timeout ({timeout__}s)', to=to, req_id=req_id)
+            logger.error(
+                f'rpc.send_message timeout ({timeout__}s)',
+                to=to,
+                req_id=req_id)
         except asyncio.CancelledError:
             logger.error('CancelledError')
         finally:
