@@ -1,3 +1,8 @@
+"""
+This module containt components for JSON2-RPC-like protocol implementation
+used to interract with side parts of platform.
+"""
+
 from jsonrpcclient.async_client import AsyncClient
 from jsonrpcclient.request import Request, Notification
 from async_timeout import timeout
@@ -8,9 +13,6 @@ import ujson
 import itertools
 
 from .. import logger, redis_factory, dome, BROADCAST, ENRICH
-
-# Seconds to receive response
-RPC_TIMEOUT = 2
 
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
@@ -28,17 +30,33 @@ class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
 
 
 class RedisPubSubRPC(AsyncClient):
-    def __init__(self, name, app, endpoint='none', **kwargs):
-        super(RedisPubSubRPC, self).__init__(endpoint)
+    """
+    Band RPC interface. 
+    Used to interract with other microservices
+
+    Class constants:
+    RPC_TIMEOUT Default timeout for RPC request (seconds)
+    """
+
+    RPC_TIMEOUT = 2
+
+    def __init__(self, name, app, rpc_params=None, redis_params=None,
+                 **kwargs):
+        super(RedisPubSubRPC, self).__init__('noop')
         self.name = name
         self._app = app
         self._loop = app.loop
         self.pending = {}
-        self.redis_params = Prodict.from_dict(kwargs.get("redis_params", {}))
+        # TODO: remove redis_params
+        if redis_params:
+            logger.warn(
+                'Variable redis_params deprecated and will be removed. Use rpc_params instead.'
+            )
+        self.rpc_params = Prodict.from_dict(rpc_params or redis_params or {})
         self.channels = set([self.name])
-        if self.redis_params.listen_all == True:
+        if self.rpc_params.listen_all == True:
             self.channels.add(BROADCAST)
-        if self.redis_params.listen_enrich == True:
+        if self.rpc_params.listen_enrich == True:
             self.channels.add(ENRICH)
         self.queue = asyncio.Queue()
         self.id_gen = itertools.count(1)
@@ -153,13 +171,14 @@ class RedisPubSubRPC(AsyncClient):
 
     async def send_message(self, request, timeout__=RPC_TIMEOUT, **kwargs):
         to = kwargs['to']
-        # Outbound msgs queue
+        # Outgoing msg queue
         await self.put(to, request.encode())
         # skip waiting for notification
         if 'request_id' not in kwargs:
             return
-        # Waiting for response
+        
         req_id = kwargs['request_id']
+        # Waiting for response
         try:
             req = self.pending[req_id] = asyncio.Future()
             # await asyncio.wait_for(self.pending[req_id], timeout=self.timeout)
@@ -167,11 +186,9 @@ class RedisPubSubRPC(AsyncClient):
                 await req
         except asyncio.TimeoutError:
             logger.error(
-                f'rpc.send_message timeout ({timeout__}s)',
-                to=to,
-                req_id=req_id)
+                'rpc timeout', timeout=timeout__, to=to, req_id=req_id)
         except asyncio.CancelledError:
-            logger.error('CancelledError')
+            logger.warn('Cancelled')
         finally:
             del self.pending[req_id]
 
