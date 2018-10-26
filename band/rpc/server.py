@@ -28,5 +28,4 @@ class AsyncRolesMethods(AsyncMethods):
         """
         for mc in self._roles.values():
             if mc.role in ROLES and not mc.method.startswith('__'):
-                print(mc)
                 yield mc._asdict()
