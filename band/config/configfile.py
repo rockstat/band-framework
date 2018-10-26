@@ -33,4 +33,4 @@ except Exception:
     logger.exception('config')
 
 
-__all__ = ['completely_config', 'settings']
+__all__ = ['settings']

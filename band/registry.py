@@ -28,11 +28,11 @@ class Expose:
         path: "/hello/:name" For services exposed by HTTP you can configure path with with params
         alias: other_service If needed possible to promote service by different name. 
         Affected only service name in front service
-        timeout: custom response wait timeout
+        timeout: custom response wait timeout (ms)
         """
         def wrapper(handler):
             self._dome.expose_method(
-                handler, name=name, path=path, role=HANDLER, timeout=None)
+                handler, name=name, path=path, role=HANDLER, timeout=timeout)
             return handler
         return wrapper
 
@@ -94,15 +94,14 @@ class Dome:
         if role == ENRICHER and not keys:
             raise ValueError('Keys property must be present')
 
-        registration = without_none(dict(
+        options = without_none(dict(
             keys=keys,
             props=props,
-            alias=alias
+            alias=alias,
+            timeout=timeout
         ))
-
-        print(registration)
         self._methods.add_method(
-            handler, name=name, role=role, registration=registration)
+            handler, name=name, role=role, options=options)
 
         self._routes += add_http_handler(handler, path)
 
@@ -112,8 +111,9 @@ class Dome:
 
     def expose(self, *args, **kwargs):
         """
-        Deprecated API method. Will be removed soon!s
+        Deprecated method "expose". Will be removed soon!
         """
+        logger.warn('Deprecated method "expose". Will be removed soon!')
         return self._expose(*args, **kwargs)
 
     def add_startup(self, task):
@@ -124,10 +124,18 @@ class Dome:
 
     @property
     def startup(self):
+        """
+        Deprecated method "startup". Will be removed soon!
+        """
+        logger.warn('Deprecated method "startup". Will be removed soon!')
         return self._startup
 
     @property
     def shutdown(self):
+        """
+        Deprecated method "shutdown". Will be removed soon!
+        """
+        logger.warn('Deprecated method "shutdown". Will be removed soon!')
         return self._shutdown
 
     @property
