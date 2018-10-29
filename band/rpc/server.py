@@ -1,6 +1,6 @@
 from jsonrpcserver.aio import AsyncMethods
-from ..constants import ROLES
 from ..lib.structs import MethodRegistration
+from ..constants import ROLES
 
 import jsonrpcserver
 
@@ -8,7 +8,7 @@ jsonrpcserver.config.log_requests = False
 jsonrpcserver.config.log_responses = False
 
 
-class AsyncRolesMethods(AsyncMethods):
+class AsyncRPCMethods(AsyncMethods):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._roles = dict()
@@ -29,3 +29,6 @@ class AsyncRolesMethods(AsyncMethods):
         for mc in self._roles.values():
             if mc.role in ROLES and not mc.method.startswith('__'):
                 yield mc._asdict()
+
+    def __contains__(self, key):
+        return key in self._items

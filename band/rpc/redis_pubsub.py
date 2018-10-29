@@ -12,7 +12,7 @@ import asyncio
 import ujson
 import itertools
 
-from .. import logger, redis_factory, dome, BROADCAST, ENRICH
+from .. import logger, redis_factory, dome, scheduler, BROADCAST, ENRICH
 
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
@@ -40,12 +40,10 @@ class RedisPubSubRPC(AsyncClient):
 
     RPC_TIMEOUT = 2
 
-    def __init__(self, name, app, rpc_params=None, redis_params=None,
+    def __init__(self, name, rpc_params=None, redis_params=None,
                  **kwargs):
         super(RedisPubSubRPC, self).__init__('noop')
         self.name = name
-        self._app = app
-        self._loop = app.loop
         self.pending = {}
         # TODO: remove redis_params
         if redis_params:
@@ -84,7 +82,7 @@ class RedisPubSubRPC(AsyncClient):
             # logger.debug('received with result', msg=msg)
             if 'id' in msg and msg['id'] in self.pending:
                 self.pending[msg['id']].set_result(msg)
-        # call to served methods
+        # call exposed method
         elif 'params' in msg:
             # check address structure
             if msg['to'] in self.channels:
@@ -96,7 +94,7 @@ class RedisPubSubRPC(AsyncClient):
 
     async def reader(self):
         for chan in self.channels:
-            await self._app['scheduler'].spawn(self.chan_reader(chan))
+            await scheduler.spawn(self.chan_reader(chan))
 
     async def chan_reader(self, chan):
         logger.info('starting reader for channel', chan=chan)
@@ -109,7 +107,7 @@ class RedisPubSubRPC(AsyncClient):
                     if msg is None:
                         break
                     msg = ujson.loads(msg)
-                    await self._app['scheduler'].spawn(self.dispatch(msg))
+                    await scheduler.spawn(self.dispatch(msg))
             except asyncio.CancelledError:
                 logger.info('redis_rpc_reader: loop cancelled / call break')
                 break

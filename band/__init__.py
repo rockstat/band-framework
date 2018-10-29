@@ -22,12 +22,16 @@ dome = Dome.instance()
 expose: Expose = dome.exposeour
 
 from .server import app, start_server, add_routes
+from .lib.scheduler import Scheduler
+
+scheduler = dome['scheduler'] = Scheduler(**settings)
+
 from .rpc.redis_pubsub import RedisPubSubRPC
-from .bootstrap import run_task, attach_scheduler, attach_redis_rpc
 
+app.on_startup.append(dome.on_startup)
+app.on_shutdown.append(dome.on_shutdown)
 
-attach_scheduler(app)
-rpc = attach_redis_rpc(app, **settings)
+rpc = dome['rpc'] = RedisPubSubRPC(**settings)
 
 # if settings.name != DIRECTOR_SERVICE:
 importlib.import_module('band.promote', 'band')
