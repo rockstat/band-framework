@@ -115,7 +115,7 @@ class RedisPubSubRPC(AsyncClient):
                 logger.exception('reader exception')
                 await asyncio.sleep(1)
             finally:
-                if not client.closed:
+                if client and not client.closed:
                     await client.unsubscribe(chan)
                     await redis_factory.close_client(client)
 
@@ -138,7 +138,8 @@ class RedisPubSubRPC(AsyncClient):
                 await asyncio.sleep(1)
             finally:
                 logger.info('redis_rpc_writer: finally / closing pool')
-                await redis_factory.close_pool(pool)
+                if pool and not pool.closed:
+                    await redis_factory.close_pool(pool)
 
     async def get(self):
         item = await self.queue.get()
