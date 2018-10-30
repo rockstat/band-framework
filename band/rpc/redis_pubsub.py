@@ -40,8 +40,7 @@ class RedisPubSubRPC(AsyncClient):
 
     RPC_TIMEOUT = 2
 
-    def __init__(self, name, rpc_params=None, redis_params=None,
-                 **kwargs):
+    def __init__(self, name, rpc_params=None, redis_params=None, **kwargs):
         super(RedisPubSubRPC, self).__init__('noop')
         self.name = name
         self.pending = {}
@@ -86,11 +85,11 @@ class RedisPubSubRPC(AsyncClient):
         elif 'params' in msg:
             # check address structure
             if msg['to'] in self.channels:
-                response = await dome.methods.dispatch(msg)
-                if not response.is_notification:
-                    resp = {**response, 'from': self.name, 'to': msg['from']}
-                    await self.put(msg['from'],
-                                   ujson.dumps(resp, ensure_ascii=False))
+                response = await dome.rpc_holder.dispatch(msg)
+                # if not response.is_notification:
+                resp = {**response, 'from': self.name, 'to': msg['from']}
+                await self.put(msg['from'],
+                                ujson.dumps(resp, ensure_ascii=False))
 
     async def reader(self):
         for chan in self.channels:
@@ -174,7 +173,7 @@ class RedisPubSubRPC(AsyncClient):
         # skip waiting for notification
         if 'request_id' not in kwargs:
             return
-        
+
         req_id = kwargs['request_id']
         # Waiting for response
         try:

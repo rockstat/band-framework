@@ -6,7 +6,7 @@ from .lib.http import add_http_handler
 from .log import logger
 from .lib.helpers import without_none
 from .constants import ENRICHER, HANDLER, LISTENER
-from .rpc.server import AsyncRPCMethods
+from .rpc.server import AsyncRPCMethods, RPCServer
 
 
 class Expose:
@@ -17,8 +17,9 @@ class Expose:
         def wrapper(handler):
             self._dome.expose_method(handler, role=None, *args, **kwargs)
             return handler
+
         return wrapper
-    
+
     def handler(self, name=None, path=None, alias=None, timeout=None):
         """
         Expose function and promote function as request handler to front service.
@@ -28,10 +29,17 @@ class Expose:
         Affected only service name in front service
         timeout: custom response wait timeout (ms)
         """
+
         def wrapper(handler):
             self._dome.expose_method(
-                handler, name=name, path=path, role=HANDLER, alias=alias, timeout=timeout)
+                handler,
+                name=name,
+                path=path,
+                role=HANDLER,
+                alias=alias,
+                timeout=timeout)
             return handler
+
         return wrapper
 
     def enricher(self, props: dict, keys: list):
@@ -41,10 +49,12 @@ class Expose:
         keys: list of requested dispatching keys
         timeout: custom response wait timeout
         """
+
         def wrapper(handler):
             self._dome.expose_method(
                 handler, props={**props}, keys=[*keys], role=ENRICHER)
             return handler
+
         return wrapper
 
     def listener(self):
@@ -52,9 +62,11 @@ class Expose:
         Expose function and promote functions as request listener to front service
         Will receive all requests at final stage
         """
+
         def wrapper(handler):
             self._dome.expose_method(handler, role=LISTENER)
             return handler
+
         return wrapper
 
 
@@ -75,6 +87,7 @@ class Dome(MutableMapping):
         self._shutdown = list()
         self._routes = []
         self._methods = AsyncRPCMethods()
+        self._rpc_holder = RPCServer()
         self._expose: Expose = Expose(self)
 
     def __getitem__(self, key):
@@ -97,8 +110,8 @@ class Dome(MutableMapping):
                       role,
                       name=None,
                       path=None,
-                      keys: List=None,
-                      props: Dict=None,
+                      keys: List = None,
+                      props: Dict = None,
                       timeout=None,
                       alias=None,
                       **kwargs):
@@ -108,13 +121,11 @@ class Dome(MutableMapping):
         if role == ENRICHER and not keys:
             raise ValueError('Keys property must be present')
 
-        options = without_none(dict(
-            keys=keys,
-            props=props,
-            alias=alias,
-            timeout=timeout
-        ))
+        options = without_none(
+            dict(keys=keys, props=props, alias=alias, timeout=timeout))
         self._methods.add_method(
+            handler, name=name, role=role, options=options)
+        self._rpc_holder.add_method(
             handler, name=name, role=role, options=options)
 
         self._routes += add_http_handler(handler, path)
@@ -172,6 +183,10 @@ class Dome(MutableMapping):
         return self._methods
 
     @property
+    def rpc_holder(self):
+        return self._rpc_holder
+
+    @property
     def routes(self):
         return self._routes
 
@@ -181,10 +196,12 @@ def worker():
     Register function as worker.
     Will be executed on application startup
     """
+
     def wrapper(handler):
         logger.info(f"Registered worker {handler.__name__}")
         Dome.instance().add_startup(handler)
         return handler
+
     return wrapper
 
 
@@ -193,10 +210,12 @@ def cleanup():
     Register function as unload handler.
     Will be executed on application shutdown
     """
+
     def wrapper(handler):
         logger.info(f"Registered cleaner {handler.__name__}")
         Dome.instance().add_shutdown(handler)
         return handler
+
     return wrapper
 
 
