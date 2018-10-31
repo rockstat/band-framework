@@ -108,16 +108,19 @@ class RedisPubSubRPC(AsyncClient):
                         break
                     msg = ujson.loads(msg)
                     await scheduler.spawn(self.dispatch(msg))
+
             except asyncio.CancelledError:
                 logger.info('redis_rpc_reader: loop cancelled / call break')
                 break
+            except ConnectionRefusedError:
+                logger.error('Redis connection refused')
             except Exception:
                 logger.exception('reader exception')
-                await asyncio.sleep(1)
             finally:
                 if client and not client.closed:
                     await client.unsubscribe(chan)
                     await redis_factory.close_client(client)
+            await asyncio.sleep(1)
 
     async def writer(self):
         while True:
@@ -133,13 +136,15 @@ class RedisPubSubRPC(AsyncClient):
             except asyncio.CancelledError:
                 logger.info('redis_rpc_writer: cancelled / break')
                 break
+            except ConnectionRefusedError:
+                logger.error('Redis connection refused')
             except Exception:
                 logger.exception('redis_rpc_writer: unknown')
-                await asyncio.sleep(1)
             finally:
                 logger.info('redis_rpc_writer: finally / closing pool')
                 if pool and not pool.closed:
                     await redis_factory.close_pool(pool)
+            await asyncio.sleep(1)
 
     async def get(self):
         item = await self.queue.get()
