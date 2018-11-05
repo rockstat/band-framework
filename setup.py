@@ -20,11 +20,14 @@ More at project documentation
     url='https://github.com/rockstat/band-framework',
     include_package_data=True,
     install_requires=[
-        'pyyaml<4', 'inflection', 'jinja2', 'coloredlogs', 'asyncio', 'uvloop',
-        'aiohttp', 'aioredis', 'aiojobs', 'aiodocker', 'aiofiles', 'async_lru',
-        'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 'requests', 'python-dotenv',
-        'prodict', 'ujson', 'simplech', 'arrow', 'structlog', 'colorama', 
-        'python-json-logger'
+        'pyyaml<4', 'inflection', 'jinja2', 'python-dotenv',
+        'requests', 
+        'asyncio', 'uvloop', 'aiohttp', 'aioredis', 'aiojobs', 
+        'aiodocker', 'aiofiles', 'async_lru', 'aiohttp-requests',
+        'simplech'
+        'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
+        'prodict', 'ujson', 'arrow', 
+        'structlog', 'colorama', 'python-json-logger', 'coloredlogs'
     ],
     zip_safe=False,
     classifiers=[
