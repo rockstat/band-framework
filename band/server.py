@@ -4,26 +4,17 @@ import asyncio
 
 from .log import logger
 from .lib.http import naive_cors_middleware, error_middleware
-from . import dome
+from . import dome, loop
 
 __all__ = ['add_routes', 'start_server', 'app']
 
 
-def loop_exc(loop, context):
-    message = context.get('message', None)
-    exception = context.get('exception', None)
-    exc_info = (type(exception), exception,
-                exception.__traceback__) if exception else None
-    logger.exception('loop ex', message=message,
-                     exception=exception, exc_info=exc_info)
-
-
-loop = uvloop.new_event_loop()
-loop.set_exception_handler(loop_exc)
-asyncio.set_event_loop(loop)
+# loop = uvloop.new_event_loop()
+# loop.set_exception_handler(loop_exc)
+# asyncio.set_event_loop(loop)
 
 app = web.Application(
-    logger=logger, debug=False, middlewares=[naive_cors_middleware, error_middleware])
+    logger=logger, debug=False, middlewares=[naive_cors_middleware, error_middleware], loop=loop)
 
 
 def add_routes(routes):
