@@ -40,7 +40,7 @@ try:
             update(config, data)
 
     config.update({
-        'name': data.get('name', name_env)
+        'name': config.get('name', name_env)
     })
 
     settings = Prodict.from_dict(config)
