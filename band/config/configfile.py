@@ -26,7 +26,11 @@ def update(d, u):
 
 try:
     root = Path(os.getcwd())
-    config = {}
+    config = {
+        'env': env,
+        '_pid': os.getpid(),
+        '_cwd': os.getcwd()
+    }
     tmplenv = Environment(loader=FileSystemLoader(str(root)))
     for fn in CONFIG_FILES:
         if os.path.exists(fn):
@@ -34,16 +38,13 @@ try:
             part = tmpl.render(**environ)
             data = yaml.load(part)
             update(config, data)
-    
-    
+
     config.update({
-        # use pre configured or detected service name
-        'name': data.get('name', name_env),
-        'env': env,
-        '_pid': os.getpid(),
-        '_cwd': os.getcwd()
+        'name': data.get('name', name_env)
     })
-    settings = Prodict.from_dict(data)
+
+    settings = Prodict.from_dict(config)
+    
 except Exception:
     logger.exception('config')
 
