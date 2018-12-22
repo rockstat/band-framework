@@ -1,10 +1,11 @@
 import time
 import ujson
+import asyncio
 from aiohttp.web import (json_response as _json_response, middleware,
-                         HTTPException, Response, RouteTableDef, RouteDef)
+                         HTTPException, Response, RouteTableDef, RouteDef, StreamResponse)
 from jsonrpcclient.exceptions import ReceivedErrorResponse
 from band import logger, response
-
+import types
 
 def json_response(result, status=200, request=None):
     return _json_response(
@@ -29,7 +30,22 @@ async def request_handler(request, handler):
     query.update(request.match_info)
     try:
         result = await handler(**query)
-        return json_response(result, request=request)
+        # Handling stream responses
+        if isinstance(result, types.AsyncGeneratorType):
+            try:
+                stream = StreamResponse()
+                await stream.prepare(request)
+                async for block in result:
+                    await stream.write(block)
+                await stream.write_eof()
+                return stream
+            # Halt handling
+            except asyncio.CancelledError:
+                logger.warn('halted response')
+            return stream
+        # regilar response
+        else:
+            return json_response(result, request=request)
     except ReceivedErrorResponse as e:
         return json_response(response.error(e.message), request=request)
     except Exception as e:
