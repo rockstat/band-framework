@@ -11,6 +11,7 @@ from prodict import Prodict
 import asyncio
 import ujson
 import itertools
+from band import response
 
 from .. import logger, redis_factory, dome, scheduler, BROADCAST, ENRICH
 
@@ -58,6 +59,10 @@ class RedisPubSubRPC(AsyncClient):
             self.channels.add(ENRICH)
         self.queue = asyncio.Queue()
         self.id_gen = itertools.count(1)
+
+    def process_response(self, resp, log_extra=None, log_format=None):
+        data = super().process_response(resp, log_extra, log_format)
+        return response.handle_incoming(data)
 
     def log_request(self, request, extra=None, fmt=None, trim=False):
         pass

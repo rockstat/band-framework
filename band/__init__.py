@@ -22,9 +22,9 @@ asyncio.set_event_loop(loop)
 from .constants import *
 from .config.configfile import settings
 from .log import *
-from .lib.response import BandResponse
+from .lib import response
 
-response = BandResponse()
+# response = BandResponse()
 
 logger.info('final configuration', settings=settings)
 
