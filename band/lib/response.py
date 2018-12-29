@@ -6,10 +6,12 @@ RESP_DATA = 'data'
 
 class BandResponse:
 
-    def __call__(self, data):
+    @staticmethod
+    def __call__(data):
         return data
 
-    def data(self, data, statusCode=200):
+    @staticmethod
+    def data(data, statusCode=200):
         return {
             'type__': RESP_DATA,
             '_response___type': RESP_DATA, #TODO: remove it
@@ -17,7 +19,8 @@ class BandResponse:
             'data': data
         }
 
-    def redirect(self, location, statusCode=302, data={}):
+    @staticmethod
+    def redirect(location, statusCode=302, data={}):
         return {
             'type__': RESP_REDIRECT,
             '_response___type': RESP_REDIRECT, #TODO: remove it
@@ -26,14 +29,16 @@ class BandResponse:
             'data': data
         }
 
-    def pixel(self, data={}):
+    @staticmethod
+    def pixel(data={}):
         return {
             'type__': RESP_PIXEL,
             '_response___type': RESP_PIXEL, #TODO: remove it
             'data': data
         }
 
-    def error(self, message="", statusCode=500, data={}):
+    @staticmethod
+    def error(message="", statusCode=500, data={}):
         return {
             'type__': RESP_ERROR,
             '_response___type': RESP_ERROR, #TODO: remove it
