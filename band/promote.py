@@ -2,7 +2,7 @@ from asyncio import sleep
 from time import time
 from datetime import timedelta
 from . import (settings, dome, expose, worker, logger,
-               rpc, DIRECTOR_SERVICE, NOTIFY_ALIVE)
+               rpc, DIRECTOR_SERVICE, NOTIFY_ALIVE, response)
 
 START_AT = round(time() * 1000)
 
@@ -29,10 +29,10 @@ async def __status(**params):
     """
     ms_diff = round(time() * 1000 - START_AT)
     up_time = str(timedelta(milliseconds=ms_diff))
-    return {
+    return response.data({
         'name': settings.name,
         'app_started': START_AT,
         'app_uptime': ms_diff,
         'app_state': 'running',
         'register': dome.methods.dicts
-    }
+    })

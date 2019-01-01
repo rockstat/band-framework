@@ -1,94 +1,136 @@
+import _collections_abc
+from typing import NamedTuple, Dict
+from operator import itemgetter as _itemgetter
+import ujson
+
 RESP_PIXEL = 'pixel'
 RESP_REDIRECT = 'redirect'
 RESP_ERROR = 'error'
 RESP_DATA = 'data'
 
 
-class BandResponse:
-    @staticmethod
-    def __call__(data):
-        return data
+class BaseBandResponse(dict):
+    type__: str = None
 
-    @staticmethod
-    def data(data, statusCode=200):
+    def to_json(self):
+        return ujson.dumps(self._asdict())
+
+    def is_redirect(self):
+        return self.type__ == RESP_REDIRECT
+
+    def is_data(self):
+        return self.type__ == RESP_DATA
+
+    def is_pixel(self):
+        return self.type__ == RESP_PIXEL
+
+    def is_error(self):
+        return self.type__ == RESP_ERROR
+
+    @property
+    def type(self):
+        return self.type__
+
+    def __getattr__(self, key):
+        return self.get(key)
+
+
+class BandResponceError(BaseBandResponse):
+    errorMessage: str
+    statusCode: int
+    data: Dict
+    type__: str = RESP_ERROR
+
+    def __init__(self, errorMessage='Unknown error', statusCode=500, data={}):
+        super().__init__(data)
+        self.type__ = self.type__
+        self.errorMessage = errorMessage
+        self.statusCode = statusCode
+
+    @property
+    def error_message(self):
+        return self.errorMessage
+
+    @property
+    def status_code(self):
+        return self.statusCode
+
+    def __str__(self):
+        return f'Error: {self.errorMessage} ({self.statusCode})'
+
+    def _asdict(self):
         return {
-            'type__': RESP_DATA,
-            '_response___type': RESP_DATA,  #TODO: remove it
-            'statusCode': statusCode,
-            'data': data
+            'type__': self.type__,
+            'statusCode': self.statusCode,
+            'errorMessage': self.errorMessage,
+            'data': self
         }
 
-    @staticmethod
-    def redirect(location, statusCode=302, data={}):
-        return {
-            'type__': RESP_REDIRECT,
-            '_response___type': RESP_REDIRECT,  #TODO: remove it
-            'location': location,
-            'statusCode': statusCode,
-            'data': data
-        }
+class BandResponceData(BaseBandResponse):
+    data: Dict
+    statusCode: int
+    type__: str = RESP_DATA
 
-    @staticmethod
-    def pixel(data={}):
-        return {
-            'type__': RESP_PIXEL,
-            '_response___type': RESP_PIXEL,  #TODO: remove it
-            'data': data
-        }
-
-    @staticmethod
-    def error(message="", statusCode=500, data={}):
-        return {
-            'type__': RESP_ERROR,
-            '_response___type': RESP_ERROR,  #TODO: remove it
-            'errorMessage': message,
-            'statusCode': statusCode,
-            'data': data,
-        }
-
-
-class BandResponseBase(dict):
-    @classmethod
-    def from_dict(cls, type__=None, _response___type=None, **data):
-        return cls(**data)
-
-
-class BandResponceError(BandResponseBase):
-    def __init__(self, message="", statusCode=500, data={}):
-        super().__init__({
-            'type__': RESP_ERROR,
-            'errorMessage': message,
-            'statusCode': statusCode,
-            'data': data,
-        })
-
-
-class BandResponceData(BandResponseBase):
     def __init__(self, data, statusCode=200):
-        super().__init__({
-            'type__': RESP_DATA,
-            'statusCode': statusCode,
-            'data': data
-        })
+        super().__init__(data)
+        self.type__ = self.type__
+        self.statusCode = statusCode
+
+    def __str__(self):
+        return f'Data: {self}'
+
+    def status_code(self):
+        return self['statusCode']
+
+    def _asdict(self):
+        return {
+            'type__': self.type__,
+            'statusCode': self.statusCode,
+            'data': self
+        }
 
 
-class BandResponceRedirect(BandResponseBase):
-    def __init__(self, location, statusCode=302, data={}):
-        super().__init__({
-            'type__': RESP_REDIRECT,
-            'location': location,
-            'statusCode': statusCode,
-            'data': data
-        })
+class BandResponceRedirect(BaseBandResponse):
+    location: str
+    statusCode: int
+    data: Dict
+    type__: str = RESP_REDIRECT
 
+    def __init__(self, location, data={}, statusCode=302):
+        super().__init__(data)
+        self.location = location
+        self.statusCode = statusCode
 
-class BandResponcePixel(BandResponseBase):
+    def status_code(self):
+        return self.statusCode
+
+    def __str__(self):
+        return f'Redirect: {self.location}'
+
+    def _asdict(self):
+        return {
+            'type__': self.type__,
+            'location': self.location,
+            'statusCode': self.statusCode,
+            'data': self
+        }
+
+class BandResponcePixel(BaseBandResponse):
+    
+    data: Dict = {}
+    type__: str = RESP_PIXEL
+
     def __init__(self, data={}):
-        super().__init__({
-            'type__': RESP_PIXEL,
-            '_response___type': RESP_PIXEL,  #TODO: remove it
-            'data': data
-        })
+        super().__init__(data)
+
+    def __str__(self):
+        return 'Pixel'
+
+    def _asdict(self):
+        return {
+            'type__': self.type__,
+            'data': self
+        }
 
 
 MAP = {
@@ -99,19 +141,18 @@ MAP = {
 }
 
 
-def handle_incoming(data):
-    if isinstance(data,
-                  dict) and ('type__' in data) and (data['type__'] in MAP):
-        return MAP[data['type__']].from_dict(**data)
-    return data
+def create_response(type__=None, **kwargs):
+    if type__ and (type__ in MAP):
+        return MAP[type__](**kwargs)
+    return kwargs
 
 
-def error(message="", statusCode=500, data={}):
-    return BandResponceError(message, statusCode=statusCode)
+def error(errorMessage="", statusCode=500, data={}):
+    return BandResponceError(errorMessage, statusCode=statusCode)
 
 
 def data(data, statusCode=200):
-    return BandResponceError(data=data, statusCode=statusCode)
+    return BandResponceData(data=data, statusCode=statusCode)
 
 
 def redirect(location, statusCode=302, data={}):
@@ -123,7 +164,7 @@ def pixel(data={}):
 
 
 __all__ = [
-    'error', 'data', 'redirect', 'pixel', 'handle_incoming',
+    'error', 'data', 'redirect', 'pixel', 'create_response',
     'BandResponceData', 'BandResponceError', 'BandResponcePixel',
-    'BandResponceRedirect'
+    'BandResponceRedirect', 'BaseBandResponse'
 ]

@@ -11,7 +11,7 @@ from prodict import Prodict
 import asyncio
 import ujson
 import itertools
-from band import response
+from ..lib.response import create_response
 
 from .. import logger, redis_factory, dome, scheduler, BROADCAST, ENRICH
 
@@ -59,10 +59,7 @@ class RedisPubSubRPC(AsyncClient):
             self.channels.add(ENRICH)
         self.queue = asyncio.Queue()
         self.id_gen = itertools.count(1)
-
-    def process_response(self, resp, log_extra=None, log_format=None):
-        data = super().process_response(resp, log_extra, log_format)
-        return response.handle_incoming(data)
+  
 
     def log_request(self, request, extra=None, fmt=None, trim=False):
         pass
@@ -83,10 +80,17 @@ class RedisPubSubRPC(AsyncClient):
                 msg['method'] = mparts[1]
                 msg['from'] = mparts[2]
         # answer
-        if 'result' in msg or 'error' in msg:
+        result = msg.get('result')
+        error = msg.get('error')
+        if result or error:
             # logger.debug('received with result', msg=msg)
-            if 'id' in msg and msg['id'] in self.pending:
+            if 'id' in msg and msg['id'] in self.pending:                
+                if result:
+                    msg['result'] = create_response(**result)
+                    # logger.debug('msg', r=msg['result'])
                 self.pending[msg['id']].set_result(msg)
+                if error:
+                    logger.error('RPC-ERR', err=error)
         # call exposed method
         elif 'params' in msg:
             # check address structure
@@ -94,8 +98,7 @@ class RedisPubSubRPC(AsyncClient):
                 response = await dome.methods.dispatch(msg)
                 if not response.is_notification:
                     resp = {**response, 'from': self.name, 'to': msg['from']}
-                    await self.put(msg['from'],
-                                   ujson.dumps(resp, ensure_ascii=False))
+                    await self.put(msg['from'], ujson.dumps(resp, ensure_ascii=False))
 
     async def reader(self):
         for chan in self.channels:
@@ -112,6 +115,7 @@ class RedisPubSubRPC(AsyncClient):
                     if msg is None:
                         break
                     msg = ujson.loads(msg)
+                    # if msg
                     await scheduler.spawn(self.dispatch(msg))
 
             except asyncio.CancelledError:

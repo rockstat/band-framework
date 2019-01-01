@@ -7,6 +7,7 @@ from jsonrpcclient.exceptions import ReceivedErrorResponse
 from band import logger, response
 import types
 
+
 def json_response(result, status=200, request=None):
     return _json_response(
         body=ujson.dumps(result, ensure_ascii=False),

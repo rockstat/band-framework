@@ -7,6 +7,7 @@ from .log import logger
 from .lib.helpers import without_none
 from .constants import ENRICHER, HANDLER, LISTENER
 from .rpc.server import AsyncRPCMethods
+from .lib.response import BaseBandResponse
 
 
 class Expose:
@@ -114,10 +115,17 @@ class Dome(MutableMapping):
             alias=alias,
             timeout=timeout
         ))
-        self._methods.add_method(
-            handler, name=name, role=role, options=options)
 
-        self._routes += add_http_handler(handler, path)
+        async def wrapped(*args, **kwargs):
+            result = await handler(*args, **kwargs)
+            if isinstance(result, BaseBandResponse):
+                return result._asdict()
+            return result
+
+        self._methods.add_method(
+            wrapped, name=name, role=role, options=options)
+
+        self._routes += add_http_handler(wrapped, path)
 
     @property
     def exposeour(self) -> Expose:

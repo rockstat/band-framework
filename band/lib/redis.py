@@ -6,7 +6,7 @@ from .. import logger
 # from weakref import WeakKeyDictionary
 
 class RedisFactory:
-    def __init__(self, redis_dsn, loop,  **kwargs):
+    def __init__(self, redis_dsn='redis://host:6379/0', loop=None, **kwargs):
         self.redis_dsn = redis_dsn
         self.loop = loop
         # self.wmap = WeakKeyDictionary()
