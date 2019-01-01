@@ -86,7 +86,7 @@ class RedisPubSubRPC(AsyncClient):
             # logger.debug('received with result', msg=msg)
             if 'id' in msg and msg['id'] in self.pending:                
                 if result:
-                    msg['result'] = create_response(**result)
+                    msg['result'] = create_response(result)
                     # logger.debug('msg', r=msg['result'])
                 self.pending[msg['id']].set_result(msg)
                 if error:
