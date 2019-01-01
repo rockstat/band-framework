@@ -1,6 +1,6 @@
 FROM python:3.6
 LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>"
-LABEL band.base-py.version="0.16.0"
+LABEL band.base-py.version="0.17.0"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		wget \
