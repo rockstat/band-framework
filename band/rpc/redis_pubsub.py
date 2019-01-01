@@ -80,17 +80,16 @@ class RedisPubSubRPC(AsyncClient):
                 msg['method'] = mparts[1]
                 msg['from'] = mparts[2]
         # answer
-        result = msg.get('result')
-        error = msg.get('error')
-        if result or error:
+        has_result_key = 'result' in msg
+        has_error_key = 'error' in msg
+        if has_result_key or has_error_key :
             # logger.debug('received with result', msg=msg)
             if 'id' in msg and msg['id'] in self.pending:                
-                if result:
-                    msg['result'] = create_response(result)
-                    # logger.debug('msg', r=msg['result'])
-                self.pending[msg['id']].set_result(msg)
-                if error:
-                    logger.error('RPC-ERR', err=error)
+                if has_result_key:
+                    msg['result'] = create_response(msg['result'])
+                self.pending[msg.get('id')].set_result(msg)
+                if has_error_key:
+                    logger.error('RPC-ERR', err=msg.get('error'))
         # call exposed method
         elif 'params' in msg:
             # check address structure
