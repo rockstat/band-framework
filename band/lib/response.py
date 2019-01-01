@@ -143,6 +143,10 @@ MAP = {
 
 def create_response(type__=None, **kwargs):
     if type__ and (type__ in MAP):
+        # for data return only data
+        if type__ == RESP_DATA:
+            return kwargs.get('data')
+        # other typed responses
         return MAP[type__](**kwargs)
     return kwargs
 

@@ -115,17 +115,11 @@ class Dome(MutableMapping):
             alias=alias,
             timeout=timeout
         ))
-
-        async def wrapped(*args, **kwargs):
-            result = await handler(*args, **kwargs)
-            if isinstance(result, BaseBandResponse):
-                return result._asdict()
-            return result
-
+        
         self._methods.add_method(
-            wrapped, name=name, role=role, options=options)
+            handler, name=name, role=role, options=options)
 
-        self._routes += add_http_handler(wrapped, path)
+        self._routes += add_http_handler(handler, path)
 
     @property
     def exposeour(self) -> Expose:

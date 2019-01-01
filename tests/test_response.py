@@ -27,6 +27,19 @@ def test_response_json():
     assert err.to_json() == '{"type__":"error","statusCode":500,"errorMessage":"Wrong way","data":{}}'
 
 
+def test_create_response():
+
+    pix = '{"type__":"pixel","data":{"mydata":"123"}}'
+    resp = create_response(**ujson.loads(pix))
+
+    assert not isinstance(resp, BandResponceData)
+    assert resp.mydata == '123'
+
+
+    err = BandResponceError('Wrong way')
+    assert err.to_json() == '{"type__":"error","statusCode":500,"errorMessage":"Wrong way","data":{}}'
+
+
 def test_response_attrs():
     response = BandResponceData({'mydata': '123'})
     
@@ -48,3 +61,4 @@ def test_response_restore():
 
     assert err.error_message == 'Wrong way'
     assert isinstance(err, BandResponceError)
+
