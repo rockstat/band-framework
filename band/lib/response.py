@@ -143,7 +143,7 @@ MAP = {
 
 def create_response(data):
     if isinstance(data, dict):
-        type__ = data.pop('type__')
+        type__ = data.pop('type__', None)
         if type__ and (type__ in MAP):
             # for data return only data
             if type__ == RESP_DATA:
