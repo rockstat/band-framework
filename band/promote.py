@@ -28,11 +28,10 @@ async def __status(**params):
     Service status
     """
     ms_diff = round(time() * 1000 - START_AT)
-    up_time = str(timedelta(milliseconds=ms_diff))
     return response.data({
         'name': settings.name,
         'app_started': START_AT,
         'app_uptime': ms_diff,
         'app_state': 'running',
-        'register': dome.methods.dicts
+        'register': [*dome.methods.dicts]
     })

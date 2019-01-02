@@ -38,6 +38,8 @@ def test_create_response():
     err = BandResponceError('Wrong way')
     assert err.to_json() == '{"type__":"error","statusCode":500,"errorMessage":"Wrong way","data":{}}'
 
+    err_restored = create_response(ujson.loads(err.to_json()))
+    assert isinstance(err_restored, BandResponceError)
     # array
 
     resp = [1,2,4]

@@ -4,11 +4,11 @@ from ..constants import ROLES
 from ..log import logger
 import jsonrpcserver
 
+
 jsonrpcserver.config.log_requests = False
 jsonrpcserver.config.log_responses = False
 jsonrpcserver.config.trim_log_values = True
 
-# configure_logger(logger, None)
 
 class AsyncRPCMethods(AsyncMethods):
     def __init__(self, *args, **kwargs):

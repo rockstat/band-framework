@@ -7,11 +7,11 @@ from jsonrpcclient.async_client import AsyncClient
 from jsonrpcclient.request import Request, Notification
 from async_timeout import timeout
 from collections import namedtuple
-from prodict import Prodict
 import asyncio
+import json
 import ujson
 import itertools
-from ..lib.response import create_response
+from ..lib.response import create_response, BaseBandResponse
 
 from .. import logger, redis_factory, dome, scheduler, BROADCAST, ENRICH
 
@@ -51,11 +51,11 @@ class RedisPubSubRPC(AsyncClient):
             logger.warn(
                 'Variable redis_params deprecated and will be removed. Use rpc_params instead.'
             )
-        self.rpc_params = Prodict.from_dict(rpc_params or redis_params or {})
+        self.rpc_params = rpc_params or redis_params or {}
         self.channels = set([self.name])
-        if self.rpc_params.listen_all == True:
+        if self.rpc_params.get('listen_all', None) == True:
             self.channels.add(BROADCAST)
-        if self.rpc_params.listen_enrich == True:
+        if self.rpc_params.get('listen_enrich', None) == True:
             self.channels.add(ENRICH)
         self.queue = asyncio.Queue()
         self.id_gen = itertools.count(1)
@@ -79,25 +79,31 @@ class RedisPubSubRPC(AsyncClient):
                 msg['to'] = mparts[0]
                 msg['method'] = mparts[1]
                 msg['from'] = mparts[2]
-        # answer
+        # Answer from remotely called method
         has_result_key = 'result' in msg
         has_error_key = 'error' in msg
         if has_result_key or has_error_key :
             # logger.debug('received with result', msg=msg)
-            if 'id' in msg and msg['id'] in self.pending:                
+            if 'id' in msg and msg.get('id') in self.pending:                
+                # wrapping into BandResponse object
                 if has_result_key:
-                    msg['result'] = create_response(msg['result'])
-                self.pending[msg.get('id')].set_result(msg)
+                    msg['result'] = create_response(msg.get('result'))
+                self.pending[msg['id']].set_result(msg)
                 if has_error_key:
                     logger.error('RPC-ERR', err=msg.get('error'))
-        # call exposed method
+        # Incoming call to exposed method
         elif 'params' in msg:
             # check address structure
-            if msg['to'] in self.channels:
+            if msg.get('to') in self.channels:
                 response = await dome.methods.dispatch(msg)
+                # check response is needed
                 if not response.is_notification:
-                    resp = {**response, 'from': self.name, 'to': msg['from']}
-                    await self.put(msg['from'], ujson.dumps(resp, ensure_ascii=False))
+                    response = {**response, 'from': self.name, 'to': msg.get('from')}
+                    # extracting full band response struct
+                    response_result = response.get('result')
+                    if response_result and isinstance(response_result, BaseBandResponse):
+                        response['result'] = response_result._asdict()
+                    await self.put(msg.get('from'), json.dumps(response, ensure_ascii=False))
 
     async def reader(self):
         for chan in self.channels:
