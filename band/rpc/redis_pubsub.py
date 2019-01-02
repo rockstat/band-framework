@@ -13,7 +13,7 @@ import ujson
 import itertools
 from ..lib.response import create_response, BaseBandResponse
 
-from .. import logger, redis_factory, dome, scheduler, BROADCAST, ENRICH
+from .. import logger, redis_factory, dome, scheduler, BROADCAST, ENRICH, REQUEST_STATUS
 
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
@@ -93,16 +93,20 @@ class RedisPubSubRPC(AsyncClient):
                     logger.error('RPC-ERR', err=msg.get('error'))
         # Incoming call to exposed method
         elif 'params' in msg:
+            is_status_request = msg.get('method') == REQUEST_STATUS
             # check address structure
             if msg.get('to') in self.channels:
                 response = await dome.methods.dispatch(msg)
                 # check response is needed
                 if not response.is_notification:
-                    response = {**response, 'from': self.name, 'to': msg.get('from')}
+                    # Converting to dict
+                    response = {**response, 'from': self.name, 'to': msg.get('from')}    
                     # extracting full band response struct
-                    response_result = response.get('result')
-                    if response_result and isinstance(response_result, BaseBandResponse):
+                    response_result = response.get('result', None)
+                    if isinstance(response_result, BaseBandResponse):
                         response['result'] = response_result._asdict()
+                    if not is_status_request:
+                        print(response)
                     await self.put(msg.get('from'), json.dumps(response, ensure_ascii=False))
 
     async def reader(self):

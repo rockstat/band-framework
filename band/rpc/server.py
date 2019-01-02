@@ -30,7 +30,7 @@ class AsyncRPCMethods(AsyncMethods):
         """
         for mc in self._roles.values():
             if mc.role in ROLES and not mc.method.startswith('__'):
-                yield mc._asdict()
+                yield dict(mc._asdict())
 
     def __contains__(self, key):
         return key in self._items

@@ -7,7 +7,6 @@ from .log import logger
 from .lib.helpers import without_none
 from .constants import ENRICHER, HANDLER, LISTENER
 from .rpc.server import AsyncRPCMethods
-from .lib.response import BaseBandResponse
 
 
 class Expose:

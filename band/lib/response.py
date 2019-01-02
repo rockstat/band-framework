@@ -1,6 +1,4 @@
-import _collections_abc
 from typing import NamedTuple, Dict
-from operator import itemgetter as _itemgetter
 import ujson
 
 RESP_PIXEL = 'pixel'
@@ -154,15 +152,15 @@ def create_response(data):
 
 
 def error(errorMessage="", statusCode=500, data={}):
-    return BandResponceError(errorMessage, statusCode=statusCode)
+    return BandResponceError(errorMessage, statusCode=statusCode, data=data)
 
 
 def data(data, statusCode=200):
-    return BandResponceData(data=data, statusCode=statusCode)
+    return BandResponceData(data, statusCode=statusCode)
 
 
 def redirect(location, statusCode=302, data={}):
-    return BandResponceError(location, statusCode=statusCode, data=data)
+    return BandResponceRedirect(location, statusCode=statusCode, data=data)
 
 
 def pixel(data={}):
