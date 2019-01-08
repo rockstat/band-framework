@@ -33,7 +33,7 @@ from .lib.http import json_response
 from .lib.redis import RedisFactory
 redis_factory = RedisFactory(**settings, loop=loop)
 
-from .registry import Dome, Expose, worker, cleanup
+from .registry import Dome, Expose, worker, cleanup, blocking
 dome = Dome.instance()
 expose: Expose = dome.exposeour
 

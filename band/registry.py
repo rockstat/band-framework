@@ -7,7 +7,7 @@ from .log import logger
 from .lib.helpers import without_none
 from .constants import ENRICHER, HANDLER, LISTENER
 from .rpc.server import AsyncRPCMethods
-
+from .sync_runner import blocking
 
 class Expose:
     def __init__(self, dome):
@@ -175,6 +175,7 @@ class Dome(MutableMapping):
     @property
     def routes(self):
         return self._routes
+  
 
 
 def worker():
@@ -201,4 +202,4 @@ def cleanup():
     return wrapper
 
 
-__all__ = ['Dome', 'Expose', 'worker', 'cleanup']
+__all__ = ['Dome', 'Expose', 'worker', 'cleanup', 'blocking']

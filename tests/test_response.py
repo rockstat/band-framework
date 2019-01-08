@@ -7,7 +7,6 @@ from band.lib import response
 from band.lib.response import BandResponceData, BandResponceError, BandResponcePixel, BandResponceRedirect, create_response
 
 
-
 def test_response():
     with pytest.raises(TypeError):
           BandResponceData()
