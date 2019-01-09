@@ -22,7 +22,7 @@ More at project documentation
     install_requires=[
         'pyyaml<4', 'inflection', 'jinja2', 'python-dotenv',
         'requests', 
-        'asyncio', 'uvloop', 'aiohttp', 'aioredis', 'aiojobs', 
+        'asyncio', 'uvloop', 'aiohttp<4', 'aioredis', 'aiojobs', 
         'aiodocker', 'aiofiles', 'async_lru',
         'simplech',
         'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
