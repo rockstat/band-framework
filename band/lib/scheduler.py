@@ -14,7 +14,7 @@ class Scheduler:
         await self.scheduler.close()
 
     async def spawn(self, coro):
-        await self.scheduler.spawn(coro)
+        return await self.scheduler.spawn(coro)
 
     async def spawn_tasks(self, tasks):
         for task in tasks:
