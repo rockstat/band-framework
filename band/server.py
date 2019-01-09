@@ -26,4 +26,4 @@ def start_server(listen, name, **kwargs):
     host, port = listen.split(':')
     add_routes(dome.routes)
 
-    web.run_app(app, host=host, port=port, handle_signals=True, print=None)
+    web.run_app(app, host=host, port=port, handle_signals=True, print=None, access_log=None)
