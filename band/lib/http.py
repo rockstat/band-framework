@@ -117,6 +117,6 @@ async def error_middleware(request, handler):
 
 
 __all__ = [
-    'json_response', 'say_cors_yes', 'naive_cors_middleware',
+    'naive_cors_middleware',
     'error_middleware'
 ]
