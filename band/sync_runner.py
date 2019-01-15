@@ -10,14 +10,12 @@ def blocking(params=None):
     """
 
     def wrapper(handler):
-        logger.info(f"rapping blocking function {handler.__name__}")
-        logger.debug('W')
-
+        logger.info(f"Wrap block {handler.__name__}")
         async def caller(*args, **kwargs):
             wrapped = partial(handler, *args, **kwargs)
+            logger.info('Executing task in custom process')
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 result = await loop.run_in_executor(pool, wrapped)
-                print('custom thread pool', result)
                 return result
 
         return caller
