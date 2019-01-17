@@ -14,7 +14,7 @@ __all__ = ['add_routes', 'start_server', 'app']
 # asyncio.set_event_loop(loop)
 
 app = web.Application(
-    logger=logger, debug=False, middlewares=[naive_cors_middleware, error_middleware], loop=loop)
+    logger=logger, debug=False, middlewares=[naive_cors_middleware, error_middleware])
 
 
 def add_routes(routes):
