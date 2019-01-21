@@ -27,7 +27,7 @@ before_deploy:
 - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 after_deploy:
 - make repo=rockstat/director br=$TRAVIS_BRANCH travis-trigger
-# - make repo=rockstat/theia-ide-image br=$TRAVIS_BRANCH travis-trigger
+- make repo=rockstat/anaconda br=$TRAVIS_BRANCH travis-trigger
 deploy:
   provider: script
   skip_cleanup: true

@@ -26,8 +26,9 @@ More at project documentation
         'aiodocker', 'aiofiles', 'async_lru', 'aiocron>=1.3,<2'
         'simplech',
         'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
-        'prodict', 'pydantic', 'ujson', 'arrow', 
-        'structlog', 'colorama', 'python-json-logger', 'coloredlogs'
+        'prodict', 'pydantic', 'ujson', 'arrow', 'yarl'
+        'structlog', 'colorama', 'python-json-logger', 'coloredlogs',
+        'pytest-aiohttp'
     ],
     zip_safe=False,
     classifiers=[
