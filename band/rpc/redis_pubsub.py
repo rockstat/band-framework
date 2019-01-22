@@ -217,5 +217,19 @@ class RedisPubSubRPC(AsyncClient):
         # Retunrning result
         return None if cm.expired else self.process_response(req.result())
 
+    
+    def __getattr__(self, name: str) -> Callable:
+        """
+        This gives us an alternate way to make a request.
+        >>> rpc.cube(3)
+        --> {"jsonrpc": "2.0", "method": "cube", "params": [3], "id": 1}
+        That's the same as saying `client.request("cube", 3)`.
+        """
+
+        def attr_handler(*args: Any, **kwargs: Any) -> Response:
+            return self.request(name, *args, **kwargs)
+
+        return attr_handler
+
 
 __all__ = ['RedisPubSubRPC']
