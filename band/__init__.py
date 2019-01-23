@@ -34,7 +34,7 @@ from .lib.redis import RedisFactory
 redis_factory = RedisFactory(**settings, loop=loop)
 
 from .registry import Dome, Expose, worker, cleanup, blocking
-dome = Dome.instance()
+dome: Dome = Dome.instance()
 expose: Expose = dome.exposeour
 
 from .server import app, start_server, add_routes
@@ -42,7 +42,7 @@ from .lib.scheduler import Scheduler
 
 scheduler = dome['scheduler'] = Scheduler(**settings, loop=loop)
 
-from .rpc.redis_pubsub import RedisPubSubRPC
+from .rpc.rpc_pubsub_redis import RedisPubSubRPC
 
 app.on_startup.append(dome.on_startup)
 app.on_shutdown.append(dome.on_shutdown)
