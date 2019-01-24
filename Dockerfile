@@ -10,10 +10,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         nano \
 	&& rm -rf /var/lib/apt/lists/*
 
+
 ENV HOST=0.0.0.0
 ENV PORT=8080
 EXPOSE ${PORT}
 WORKDIR /usr/src/band
 ADD . .
+RUN pip install -U 'git+https://github.com/madiedinro/simple-clickhouse#egg=band'
 RUN python setup.py develop
 RUN pip freeze
