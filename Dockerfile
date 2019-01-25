@@ -16,6 +16,6 @@ ENV PORT=8080
 EXPOSE ${PORT}
 WORKDIR /usr/src/band
 ADD . .
-RUN pip install -U 'git+https://github.com/madiedinro/simple-clickhouse#egg=band'
+RUN pip install -U 'git+https://github.com/madiedinro/simple-clickhouse#egg=simplech'
 RUN python setup.py develop
 RUN pip freeze
