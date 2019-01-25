@@ -6,9 +6,10 @@ from .. import logger
 class Scheduler:
     def __init__(self, **kwargs):
         self.scheduler = None
+        self.jobs_limit = kwargs.get('jobs_limit', 200)
 
     async def startup(self):
-        self.scheduler = await aiojobs.create_scheduler(exception_handler=None)
+        self.scheduler = await aiojobs.create_scheduler(exception_handler=None, limit=self.jobs_limit)
 
     async def shutdown(self):
         await self.scheduler.close()
