@@ -8,7 +8,6 @@ Rockstat platform has own microservice management tool call `director` (on of im
 
 [Read more](https://rockstat.ru/about)
 
-
 ## Components (Band collection)
 
 ### Director 
