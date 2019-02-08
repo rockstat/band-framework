@@ -2,7 +2,7 @@ FROM python:3.6-alpine3.9
 LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>"
 LABEL band.base-py.version="0.17.6"
 
-RUN apt add --no-cache \
+RUN apk add --no-cache \
 		wget \
         curl \
 		unzip \
