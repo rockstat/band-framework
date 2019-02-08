@@ -1,14 +1,13 @@
-FROM python:3.6
+FROM python:3.6-alpine3.9
 LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>"
 LABEL band.base-py.version="0.17.6"
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt add --no-cache \
 		wget \
         curl \
 		unzip \
 		gzip \
-        nano \
-	&& rm -rf /var/lib/apt/lists/*
+        nano
 
 
 ENV HOST=0.0.0.0
