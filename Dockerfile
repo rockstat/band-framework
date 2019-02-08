@@ -3,13 +3,10 @@ LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>"
 LABEL band.base-py.version="0.17.6"
 
 RUN apk add --no-cache \
-		wget \
-        curl \
-		unzip \
-		gzip \
-        nano \
-		git
-
+		wget curl \
+		unzip gzip \
+        nano git \
+    make gcc g++ coreutils
 
 ENV HOST=0.0.0.0
 ENV PORT=8080
