@@ -7,7 +7,8 @@ RUN apk add --no-cache \
         curl \
 		unzip \
 		gzip \
-        nano
+        nano \
+		git
 
 
 ENV HOST=0.0.0.0
