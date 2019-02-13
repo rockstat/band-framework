@@ -109,7 +109,7 @@ class RedisPubSubRPC(AsyncClient):
                         response['result'] = response_result._asdict()
                     if not is_status_request:
                         print(response)
-                    await self.put(msg.get('from'), json.dumps(response, ensure_ascii=False))
+                    await self.put(msg.get('from'), ujson.dumps(response, ensure_ascii=False))
 
     async def reader(self):
         for chan in self.channels:
