@@ -1,19 +1,16 @@
 from jinja2 import Environment, FileSystemLoader, Template
 import collections
-
 import os
-from path import Path
 from pprint import pprint
 import yaml
 from prodict import Prodict as pdict
-
 from ..log import logger
 from .env import env, name_env, environ
 from .reader import reader
 
 DEFAULT_FILES = ['config.yaml', 'custom.yml']
 
-root = Path(os.getcwd())
+root = os.getcwd()
 
 config = {
     'env': env,
@@ -30,7 +27,7 @@ def update(d, u):
     return d
 
 for fn in DEFAULT_FILES:
-    data = reader(root / fn)
+    data = reader(f'{root}/{fn}')
     if data:
         update(config, data)
 
