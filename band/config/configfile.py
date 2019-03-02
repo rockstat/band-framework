@@ -2,19 +2,24 @@ from jinja2 import Environment, FileSystemLoader, Template
 import collections
 
 import os
-from pathlib import Path
+from path import Path
 from pprint import pprint
-import socket
 import yaml
-import sys
-from prodict import Prodict
+from prodict import Prodict as pdict
 
 from ..log import logger
-from ..constants import DIRECTOR_SERVICE
-from .env import ENV_DEV, ENV_PROD, env, name_env, environ
+from .env import env, name_env, environ
+from .reader import reader
 
-CONFIG_FILES = ['config.yaml', 'custom.yml']
+DEFAULT_FILES = ['config.yaml', 'custom.yml']
 
+root = Path(os.getcwd())
+
+config = {
+    'env': env,
+    '_pid': os.getpid(),
+    '_cwd': os.getcwd()
+}
 
 def update(d, u):
     for k, v in u.items():
@@ -24,29 +29,14 @@ def update(d, u):
             d[k] = v
     return d
 
-try:
-    root = Path(os.getcwd())
-    config = {
-        'env': env,
-        '_pid': os.getpid(),
-        '_cwd': os.getcwd()
-    }
-    tmplenv = Environment(loader=FileSystemLoader(str(root)))
-    for fn in CONFIG_FILES:
-        if os.path.exists(fn):
-            tmpl = tmplenv.get_template(fn)
-            part = tmpl.render(**environ)
-            data = yaml.load(part)
-            update(config, data)
+for fn in DEFAULT_FILES:
+    data = reader(root / fn)
+    if data:
+        update(config, data)
 
-    config.update({
-        'name': config.get('name', name_env)
-    })
-
-    settings = Prodict.from_dict(config)
-    
-except Exception:
-    logger.exception('config')
-
+config.update({
+    'name': config.get('name', name_env)
+})
+settings = pdict.from_dict(config)
 
 __all__ = ['settings']
