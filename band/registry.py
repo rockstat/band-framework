@@ -15,6 +15,7 @@ class Expose:
 
     def __call__(self, *args, **kwargs):
         def wrapper(handler):
+            
             self._dome.expose_method(handler, role=None, *args, **kwargs)
             return handler
         return wrapper
@@ -28,6 +29,7 @@ class Expose:
         Affected only service name in front service
         timeout: custom response wait timeout (ms)
         """
+        
         def wrapper(handler):
             self._dome.expose_method(
                 handler, name=name, path=path, role=HANDLER, alias=alias, timeout=timeout)

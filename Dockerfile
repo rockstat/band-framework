@@ -6,7 +6,9 @@ RUN apk add --no-cache \
 		wget curl \
 		unzip gzip \
         nano git \
-    make gcc g++ coreutils
+    make gcc g++ coreutils \
+    libffi-dev
+
 
 ENV HOST=0.0.0.0
 ENV PORT=8080
