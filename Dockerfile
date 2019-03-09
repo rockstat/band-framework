@@ -7,7 +7,7 @@ RUN apk add --no-cache \
 		unzip gzip \
         nano git \
     make gcc g++ coreutils \
-    libffi-dev
+    libffi-dev openssl-dev
 
 
 ENV HOST=0.0.0.0
