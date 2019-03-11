@@ -28,7 +28,8 @@ More at project documentation
         'simplech>=0.15',
         'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
         'prodict', 'pydantic', 'ujson', 'arrow', 'yarl',
-        'structlog', 'colorama', 'python-json-logger', 'coloredlogs'
+        'structlog', 'colorama', 'python-json-logger', 'coloredlogs',
+        'cryptography', 'base58'
     ],
     zip_safe=False,
     classifiers=[
