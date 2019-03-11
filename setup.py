@@ -29,7 +29,7 @@ More at project documentation
         'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
         'prodict', 'pydantic', 'ujson', 'arrow', 'yarl',
         'structlog', 'colorama', 'python-json-logger', 'coloredlogs',
-        'cryptography', 'base58'
+        'cryptography', 'base58', 'xxhash'
     ],
     zip_safe=False,
     classifiers=[
