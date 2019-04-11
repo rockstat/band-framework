@@ -107,8 +107,8 @@ class RedisPubSubRPC(AsyncClient):
                     response_result = response.get('result', None)
                     if isinstance(response_result, BaseBandResponse):
                         response['result'] = response_result._asdict()
-                    if not is_status_request:
-                        print(response)
+                    # if not is_status_request:
+                        # print(response)
                     await self.put(msg.get('from'), ujson.dumps(response, ensure_ascii=False))
 
     async def reader(self):
