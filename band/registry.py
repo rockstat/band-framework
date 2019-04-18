@@ -36,7 +36,7 @@ class Expose:
             return handler
         return wrapper
 
-    def enricher(self, props: dict, keys: list):
+    def enricher(self, props: dict, keys: list, alias=None):
         """
         Expose function and promote function as request enricher to front service
         props: list contains requests props in dot notation like ["sess.type"]
@@ -45,7 +45,7 @@ class Expose:
         """
         def wrapper(handler):
             self._dome.expose_method(
-                handler, props={**props}, keys=[*keys], role=ENRICHER)
+                handler, props={**props}, keys=[*keys], alias=alias, role=ENRICHER)
             return handler
         return wrapper
 
