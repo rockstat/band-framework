@@ -1,10 +1,6 @@
-import json
-import ujson
-import orjson
-
 import pytest
 
-from band.lib.json import json_def
+from band.lib.json import json_def, json_loads, json_dumps
 
 from band.lib import response
 from band.lib.response import BandResponceData, BandResponceError, BandResponcePixel, BandResponceRedirect, create_response
@@ -32,7 +28,7 @@ def test_response_json():
 def test_create_response():
 
     pix = '{"type__":"pixel","data":{"mydata":"123"}}'
-    resp = create_response(orjson.loads(pix))
+    resp = create_response(json_loads(pix))
 
     assert not isinstance(resp, BandResponceData)
     assert resp.mydata == '123'
@@ -40,7 +36,7 @@ def test_create_response():
     err = BandResponceError('Wrong way')
     assert err.to_json() == b'{"type__":"error","statusCode":500,"errorMessage":"Wrong way","data":{}}'
 
-    err_restored = create_response(orjson.loads(err.to_json()))
+    err_restored = create_response(json_loads(err.to_json()))
     assert isinstance(err_restored, BandResponceError)
     # array
 
@@ -80,7 +76,7 @@ def test_response_restore():
     assert isinstance(err, BandResponceError)
 
     js = err.to_json()
-    err = create_response(orjson.loads(js))
+    err = create_response(json_loads(js))
 
     assert err.error_message == 'Wrong way'
     assert isinstance(err, BandResponceError)

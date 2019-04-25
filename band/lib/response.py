@@ -1,8 +1,6 @@
 from typing import NamedTuple, Dict
-import ujson
-import orjson
 
-from ..lib.json import json_def, json_dumps
+from ..lib.json import json_def, json_dumps, json_loads
 
 RESP_PIXEL = 'pixel'
 RESP_REDIRECT = 'redirect'

@@ -27,7 +27,7 @@ More at project documentation
         'aiodocker', 'aiofiles', 'aiocron>=1.3,<2'
         'simplech>=0.15',
         'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
-        'prodict', 'pydantic', 'ujson', 'orjson', 'arrow', 'yarl',
+        'prodict', 'pydantic', 'ujson', 'arrow', 'yarl',
         'structlog', 'colorama', 'python-json-logger', 'coloredlogs',
         'cryptography', 'base58', 'xxhash'
     ],

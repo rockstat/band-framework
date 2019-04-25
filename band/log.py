@@ -1,6 +1,5 @@
 import sys
 import ujson
-import orjson
 import logging
 import structlog
 from .lib.helpers import env_is_true

@@ -1,6 +1,4 @@
 import time
-import ujson
-import orjson
 import asyncio
 from aiohttp.web import (json_response as _json_response, middleware,
                          HTTPException, Response, RouteTableDef, RouteDef, StreamResponse)
@@ -26,7 +24,7 @@ async def request_handler(request, handler):
         if request.content_type == 'application/json':
             raw = await request.text()
             if raw:
-                query.update(orjson.loads(raw))
+                query.update(json_loads(raw))
         else:
             post = await request.post()
             query.update(post)
