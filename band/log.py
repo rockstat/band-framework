@@ -1,16 +1,17 @@
 import sys
 import ujson
+import orjson
 import logging
 import structlog
 from .lib.helpers import env_is_true
-
+from .lib.json import json_def
 from pythonjsonlogger import jsonlogger
 
 
 def dumper(*args, **kwargs):
     kwargs.pop('default', None)
     kwargs['ensure_ascii'] = False
-    return ujson.dumps(*args, **kwargs)
+    return orjson.dumps(*args, **kwargs, default=json_def)
 
 
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")

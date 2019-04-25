@@ -12,8 +12,10 @@ from typing import Callable, Any
 import asyncio
 import json
 import ujson
+import orjson
 import itertools
 from ..lib.response import create_response, BaseBandResponse
+from ..lib.json import json_def
 
 from .. import logger, redis_factory, dome, scheduler, BROADCAST, ENRICH, REQUEST_STATUS
 
@@ -109,7 +111,7 @@ class RedisPubSubRPC(AsyncClient):
                         response['result'] = response_result._asdict()
                     # if not is_status_request:
                         # print(response)
-                    await self.put(msg.get('from'), ujson.dumps(response, ensure_ascii=False))
+                    await self.put(msg.get('from'), orjson.dumps(response, default=json_def))
 
     async def reader(self):
         for chan in self.channels:
@@ -125,7 +127,7 @@ class RedisPubSubRPC(AsyncClient):
                     msg = await channel.get(encoding='utf-8')
                     if msg is None:
                         break
-                    msg = ujson.loads(msg)
+                    msg = orjson.loads(msg)
                     # if msg
                     await scheduler.spawn(self.dispatch(msg))
 

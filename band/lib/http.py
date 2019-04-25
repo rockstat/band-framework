@@ -1,5 +1,6 @@
 import time
 import ujson
+import orjson
 import asyncio
 from aiohttp.web import (json_response as _json_response, middleware,
                          HTTPException, Response, RouteTableDef, RouteDef, StreamResponse)
@@ -7,10 +8,12 @@ from jsonrpcclient.exceptions import ReceivedErrorResponse
 from band import logger, response
 import types
 
+from ..lib.json import json_def
+
 
 def json_response(result, status=200, request=None):
     return _json_response(
-        body=ujson.dumps(result, ensure_ascii=False),
+        body=orjson.dumps(result, default=json_def),
         status=status,
         headers=cors_headers(request=request))
 
@@ -23,7 +26,7 @@ async def request_handler(request, handler):
         if request.content_type == 'application/json':
             raw = await request.text()
             if raw:
-                query.update(ujson.loads(raw))
+                query.update(orjson.loads(raw))
         else:
             post = await request.post()
             query.update(post)
