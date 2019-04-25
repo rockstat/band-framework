@@ -15,9 +15,11 @@ import ujson
 import orjson
 import itertools
 from ..lib.response import create_response, BaseBandResponse
-from ..lib.json import json_def
+from ..lib.json import json_def, json_dumps
 
 from .. import logger, redis_factory, dome, scheduler, BROADCAST, ENRICH, REQUEST_STATUS
+
+
 
 
 class MethodCall(namedtuple('MethodCall', ['dest', 'method', 'source'])):
@@ -111,7 +113,7 @@ class RedisPubSubRPC(AsyncClient):
                         response['result'] = response_result._asdict()
                     # if not is_status_request:
                         # print(response)
-                    await self.put(msg.get('from'), orjson.dumps(response, default=json_def))
+                    await self.put(msg.get('from'), json_dumps(response))
 
     async def reader(self):
         for chan in self.channels:

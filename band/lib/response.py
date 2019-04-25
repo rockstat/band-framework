@@ -2,7 +2,7 @@ from typing import NamedTuple, Dict
 import ujson
 import orjson
 
-from ..lib.json import json_def
+from ..lib.json import json_def, json_dumps
 
 RESP_PIXEL = 'pixel'
 RESP_REDIRECT = 'redirect'
@@ -14,7 +14,7 @@ class BaseBandResponse(dict):
     type__: str = None
 
     def to_json(self):
-        return orjson.dumps(self._asdict(), default=json_def)
+        return json_dumps(self._asdict())
 
     def is_redirect(self):
         return self.type__ == RESP_REDIRECT

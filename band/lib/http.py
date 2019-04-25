@@ -8,12 +8,12 @@ from jsonrpcclient.exceptions import ReceivedErrorResponse
 from band import logger, response
 import types
 
-from ..lib.json import json_def
+from ..lib.json import json_def, json_dumps
 
 
 def json_response(result, status=200, request=None):
     return _json_response(
-        body=orjson.dumps(result, default=json_def),
+        body=json_dumps(result),
         status=status,
         headers=cors_headers(request=request))
 

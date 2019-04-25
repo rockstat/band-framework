@@ -4,14 +4,14 @@ import orjson
 import logging
 import structlog
 from .lib.helpers import env_is_true
-from .lib.json import json_def
+from .lib.json import json_def, json_dumps
 from pythonjsonlogger import jsonlogger
 
 
 def dumper(*args, **kwargs):
     kwargs.pop('default', None)
     kwargs['ensure_ascii'] = False
-    return orjson.dumps(*args, **kwargs, default=json_def)
+    return json_dumps(*args, **kwargs)
 
 
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
