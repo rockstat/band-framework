@@ -1,4 +1,4 @@
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader, Template, TemplateNotFound
 import collections
 import os
 import yaml
@@ -14,7 +14,8 @@ def reader(fn):
         part = tmpl.render(**environ)
         data = yaml.load(part)
         return data
-        
+    except TemplateNotFound:
+        logger.warn('Template not found', file=fn)
     except Exception:
         logger.exception('config')
 

@@ -1,16 +1,9 @@
 import sys
-import ujson
 import logging
 import structlog
 from .lib.helpers import env_is_true
 from .lib.json import json_def, json_dumps
 from pythonjsonlogger import jsonlogger
-
-
-def dumper(*args, **kwargs):
-    kwargs.pop('default', None)
-    kwargs['ensure_ascii'] = False
-    return json_dumps(*args, **kwargs)
 
 
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
@@ -31,7 +24,7 @@ processors = [
 
 
 if env_is_true('JSON_LOGS'):
-    processors.append(structlog.processors.JSONRenderer(serializer=dumper))
+    processors.append(structlog.processors.JSONRenderer(serializer=json_dumps))
     pass
 
 else:

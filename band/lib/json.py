@@ -8,7 +8,9 @@ def json_def(obj):
         return dict(obj)
 
 
-def json_dumps(data):
+def json_dumps(data, **kwargs):
+    # kwargs.pop('default', None)
+    # kwargs['ensure_ascii'] = False
     return ujson.dumps(data, ensure_ascii=False)
 
 
