@@ -1,10 +1,10 @@
-__VERSION__ = '0.20.2'
+__VERSION__ = '0.20.3'
 
 from setuptools import setup, find_packages
 
 setup(
     name='band',
-    version='0.20.2',
+    version='0.20.3',
     author='Dmitry Rodin',
     author_email='madiedinro@gmail.com',
     license='MIT',
