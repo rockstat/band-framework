@@ -21,15 +21,14 @@ More at project documentation
     include_package_data=True,
     install_requires=[
         'pyyaml<4', 'inflection', 'jinja2', 'python-dotenv',
-        'requests', 
-        'asyncio', 'uvloop', 'async_lru',
-        'aiohttp<4', 'aioredis', 'aiojobs', 'aiocache',
-        'aiodocker', 'aiofiles', 'aiocron>=1.3,<2'
-        'simplech>=0.15',
-        'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
-        'prodict', 'pydantic', 'ujson', 'arrow', 'yarl',
         'structlog', 'colorama', 'python-json-logger', 'coloredlogs',
         'cryptography', 'base58', 'xxhash'
+        'asyncio', 'uvloop', 'async_lru',
+        'aiohttp<4', 'aioredis', 'aiojobs', 'aiocache',
+        'aiofiles', 'aiocron>=1.3,<2', 'yarl',
+        'simplech>=0.16',
+        'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
+        'prodict', 'pydantic', 'ujson', 'arrow'
     ],
     zip_safe=False,
     classifiers=[
