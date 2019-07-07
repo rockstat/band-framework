@@ -22,7 +22,7 @@ More at project documentation
     install_requires=[
         'pyyaml>=4.2b1', 'inflection', 'jinja2', 'python-dotenv',
         'structlog', 'colorama', 'python-json-logger', 'coloredlogs',
-        'cryptography', 'base58', 'xxhash'
+        'cryptography', 'base58', 'xxhash',
         'asyncio', 'uvloop', 'async_lru', 'aioconsole',
         'aiohttp<4', 'aioredis', 'aiojobs', 'aiocache',
         'aiofiles', 'aiocron>=1.3,<2', 'yarl',
