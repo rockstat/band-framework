@@ -28,6 +28,7 @@ More at project documentation
         'aiofiles', 'aiocron>=1.3,<2', 'yarl',
         'simplech>=0.16',
         'jsonrpcserver==3.5.6', 'jsonrpcclient==2.6.0', 
+        'requests', # for jsonrpc client
         'prodict', 'pydantic', 'ujson', 'arrow'
     ],
     zip_safe=False,
