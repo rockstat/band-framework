@@ -9,8 +9,8 @@ bump-minor:
 
 build_image:
 	docker build -t band-base-py .
-	docker tag band-base-py rockstat/band-base-py:dev
-	docker tag band-base-py rockstat/band-base-py:latest
+	docker tag band-base-py rockstat/band-base-py:3.7-dev
+	docker tag band-base-py rockstat/band-base-py:3.7
 
 push_image_dev:
 	docker push rockstat/band-base-py:dev

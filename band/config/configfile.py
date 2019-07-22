@@ -2,11 +2,12 @@ from jinja2 import Environment, FileSystemLoader, Template
 import collections
 import os
 from pprint import pprint
-import yaml
 from prodict import Prodict as pdict
-from ..log import logger
-from .env import env, name_env, environ
+
+from .env import env, name_env, environ, ENVS
 from .reader import reader
+from ..log import logger
+
 
 DEFAULT_FILES = ['config.yaml', 'custom.yml']
 
@@ -31,9 +32,17 @@ for fn in DEFAULT_FILES:
     if data:
         update(config, data)
 
+
+
 config.update({
     'name': config.get('name', name_env)
 })
+
+# Support for env subconfigs
+env_subsection = config.pop(env, {})
+config.update(env_subsection)
+
+
 settings = pdict.from_dict(config)
 
 __all__ = ['settings']
