@@ -1,6 +1,6 @@
 FROM python:3.7-alpine
 LABEL maintainer="Dmitry Rodin <madiedinro@gmail.com>"
-LABEL band.base-py.version="0.20.6"
+LABEL band.base-py.version="0.21.0"
 
 RUN apk add --no-cache \
 		wget curl \
