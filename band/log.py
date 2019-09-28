@@ -1,6 +1,7 @@
 import sys
 import logging
 import structlog
+from structlog.stdlib import BoundLogger
 from .lib.helpers import env_is_true
 from .lib.json import json_def, json_dumps
 from pythonjsonlogger import jsonlogger
@@ -39,7 +40,6 @@ structlog.configure(
     # cache_logger_on_first_use=True,
 )
 
-logger = structlog.get_logger()
+logger: BoundLogger = structlog.get_logger()
 
-
-x__all__ = ['logger']
+__all__ = ['logger']
