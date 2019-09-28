@@ -18,9 +18,10 @@ env:
 services:
 - docker
 script:
-- cat Dockerfile | sed  "s/\:latest/\:$TAG/g" > Dockerfile.tag
+# - cat Dockerfile | sed  "s/\:latest/\:$TAG/g" > Dockerfile.tag
 - echo "$PROJECT_NAME $IMAGE_NAME:$TAG"
-- docker build -t $PROJECT_NAME -f Dockerfile.tag .
+# - docker build --build-arg  -t $PROJECT_NAME -f Dockerfile.tag .
+- docker build -t $PROJECT_NAME -f Dockerfile .
 after_script:
 - docker images
 before_deploy:
