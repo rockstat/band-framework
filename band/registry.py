@@ -1,6 +1,6 @@
 from typing import Dict, List
 from prodict import Prodict as pdict
-from collections import MutableMapping
+from collections.abc import MutableMapping
 
 from .lib.http import add_http_handler
 from .log import logger

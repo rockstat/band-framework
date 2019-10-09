@@ -9,7 +9,7 @@ from .reader import reader
 from ..log import logger
 
 
-DEFAULT_FILES = ['config.yaml', 'custom.yml']
+DEFAULT_FILES = ['config.yaml' ,'config.yml', 'custom.yaml', 'custom.yml']
 
 root = os.getcwd()
 
